@@ -104,15 +104,22 @@ function Home() {
       context.fillStyle = '#dfd2bf';
       context.fillRect(sideInset, topInset, photoSize, photoSize);
 
-      const scale = Math.max(photoSize / source.naturalWidth, photoSize / source.naturalHeight);
-      const drawWidth = source.naturalWidth * scale;
-      const drawHeight = source.naturalHeight * scale;
+      // Match the preview's object-fit: cover behavior. Crop the source to a
+      // centered square before drawing it into the bounded photo rectangle so
+      // pixels can never bleed into the frame or caption area.
+      const sourceSize = Math.min(source.naturalWidth, source.naturalHeight);
+      const sourceX = (source.naturalWidth - sourceSize) / 2;
+      const sourceY = (source.naturalHeight - sourceSize) / 2;
       context.drawImage(
         source,
-        sideInset + (photoSize - drawWidth) / 2,
-        topInset + (photoSize - drawHeight) / 2,
-        drawWidth,
-        drawHeight,
+        sourceX,
+        sourceY,
+        sourceSize,
+        sourceSize,
+        sideInset,
+        topInset,
+        photoSize,
+        photoSize,
       );
 
       context.fillStyle = '#493c35';
