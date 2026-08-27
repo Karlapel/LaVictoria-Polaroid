@@ -31,6 +31,7 @@ function Home() {
   const [error, setError] = useState('');
   const [downloaded, setDownloaded] = useState(false);
   const [caption, setCaption] = useState(DEFAULT_CAPTION);
+  const displayCaption = caption.trim() || DEFAULT_CAPTION;
 
   useEffect(() => {
     return () => {
@@ -127,7 +128,7 @@ function Home() {
       context.textBaseline = 'middle';
       context.font = '500 52px Georgia, serif';
       context.fillText(
-        caption.trim() || DEFAULT_CAPTION,
+        displayCaption,
         frameWidth / 2,
         topInset + photoSize + captionHeight / 2,
         photoSize,
@@ -299,7 +300,7 @@ function Home() {
                     )}
                   </div>
                   <div className="polaroid-caption" data-testid="text-polaroid-caption">
-                    {caption.trim() || DEFAULT_CAPTION}
+                    {displayCaption}
                   </div>
                 </div>
               ) : (
@@ -309,7 +310,7 @@ function Home() {
                       <Camera size={22} strokeWidth={1.5} />
                     </span>
                   </div>
-                  <div className="empty-caption">{caption.trim() || DEFAULT_CAPTION}</div>
+                  <div className="empty-caption">{displayCaption}</div>
                 </div>
               )}
             </div>
