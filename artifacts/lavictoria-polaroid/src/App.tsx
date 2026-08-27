@@ -15,6 +15,8 @@ import {
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const DEFAULT_CAPTION = 'a little moment';
+const MAX_CAPTION_LENGTH = 42;
 
 type ImageFile = {
   file: File;
@@ -28,6 +30,7 @@ function Home() {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState('');
   const [downloaded, setDownloaded] = useState(false);
+  const [caption, setCaption] = useState(DEFAULT_CAPTION);
 
   useEffect(() => {
     return () => {
@@ -87,12 +90,12 @@ function Home() {
 
       const canvas = document.createElement('canvas');
       const frameWidth = 1200;
-      const photoSize = 1030;
-      const sideInset = (frameWidth - photoSize) / 2;
-      const topInset = 52;
-      const bottomInset = 150;
+      const photoSize = 1020;
+      const sideInset = 90;
+      const topInset = 90;
+      const captionHeight = 230;
       canvas.width = frameWidth;
-      canvas.height = photoSize + topInset + bottomInset;
+      canvas.height = topInset + photoSize + captionHeight;
       const context = canvas.getContext('2d');
       if (!context) throw new Error('Canvas is unavailable');
 
@@ -115,8 +118,13 @@ function Home() {
       context.fillStyle = '#493c35';
       context.textAlign = 'center';
       context.textBaseline = 'middle';
-      context.font = '500 37px Georgia, serif';
-      context.fillText('a little moment', frameWidth / 2, topInset + photoSize + 82);
+      context.font = '500 52px Georgia, serif';
+      context.fillText(
+        caption.trim() || DEFAULT_CAPTION,
+        frameWidth / 2,
+        topInset + photoSize + captionHeight / 2,
+        photoSize,
+      );
 
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
       if (!blob) throw new Error('Could not make the image');
@@ -189,6 +197,29 @@ function Home() {
               <p className="file-note"><FileImage size={13} /> JPG, PNG, WEBP, or GIF · up to 20 MB</p>
             </label>
 
+            <div className="caption-field">
+              <div className="caption-field-header">
+                <label className="caption-label" htmlFor="polaroid-caption">
+                  Add a caption
+                </label>
+                <span className="caption-hint">name, date, or a little note</span>
+              </div>
+              <div className="caption-input-wrap">
+                <input
+                  id="polaroid-caption"
+                  type="text"
+                  value={caption}
+                  maxLength={MAX_CAPTION_LENGTH}
+                  onChange={(event) => setCaption(event.target.value)}
+                  placeholder="e.g. August 2026"
+                  data-testid="input-polaroid-caption"
+                />
+                <span className="caption-count" aria-hidden="true">
+                  {caption.length}/{MAX_CAPTION_LENGTH}
+                </span>
+              </div>
+            </div>
+
             {error && (
               <div className="error-message" role="alert" aria-live="polite" data-testid="status-upload-error">
                 <AlertCircle size={17} aria-hidden="true" />
@@ -260,7 +291,9 @@ function Home() {
                       </div>
                     )}
                   </div>
-                  <div className="polaroid-caption" data-testid="text-polaroid-caption">a little moment</div>
+                  <div className="polaroid-caption" data-testid="text-polaroid-caption">
+                    {caption.trim() || DEFAULT_CAPTION}
+                  </div>
                 </div>
               ) : (
                 <div className="empty-polaroid" data-testid="empty-preview-state">
@@ -269,7 +302,7 @@ function Home() {
                       <Camera size={22} strokeWidth={1.5} />
                     </span>
                   </div>
-                  <div className="empty-caption">your photo will live here</div>
+                  <div className="empty-caption">{caption.trim() || DEFAULT_CAPTION}</div>
                 </div>
               )}
             </div>
@@ -285,7 +318,7 @@ function Home() {
               {downloaded ? 'Saved to your downloads' : 'Download your Polaroid'}
             </button>
             <p className="shortcut" data-testid="text-download-hint">
-              {image ? 'A PNG with the photo, border, and caption area.' : 'Choose a photo to unlock the download.'}
+              {image ? 'A PNG matching the frame you see above.' : 'Choose a photo to unlock the download.'}
             </p>
           </section>
         </div>

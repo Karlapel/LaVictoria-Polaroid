@@ -308,6 +308,74 @@
   white-space: nowrap;
 }
 
+.caption-field {
+  margin-top: 22px;
+}
+
+.caption-field-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.caption-label {
+  color: hsl(var(--foreground));
+  font-size: .73rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.caption-hint {
+  color: hsl(var(--muted-foreground));
+  font-size: .7rem;
+}
+
+.caption-input-wrap {
+  position: relative;
+}
+
+.caption-input-wrap input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 68px 0 16px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 9px;
+  outline: none;
+  background: rgba(250, 246, 236, .76);
+  color: hsl(var(--foreground));
+  font-family: var(--app-font-serif);
+  font-size: .95rem;
+  transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
+}
+
+.caption-input-wrap input::placeholder {
+  color: hsl(var(--muted-foreground));
+  opacity: .72;
+}
+
+.caption-input-wrap input:hover,
+.caption-input-wrap input:focus {
+  border-color: hsl(var(--primary) / .62);
+  background: rgba(250, 246, 236, .96);
+}
+
+.caption-input-wrap input:focus {
+  box-shadow: 0 0 0 3px hsl(var(--accent) / .14);
+}
+
+.caption-count {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  color: hsl(var(--muted-foreground));
+  font-size: .67rem;
+  font-variant-numeric: tabular-nums;
+  transform: translateY(-50%);
+}
+
 .upload-seal {
   display: grid;
   width: 58px;
@@ -477,7 +545,7 @@
 
 .polaroid {
   width: min(100%, 304px);
-  padding: 13px 13px 20px;
+  padding: 7.5% 7.5% 0;
   background: #f8f5ed;
   box-shadow: 0 17px 26px rgba(76, 45, 35, .23), 0 2px 4px rgba(76, 45, 35, .1);
   color: #322a26;
@@ -526,20 +594,26 @@
 }
 
 .polaroid-caption {
-  min-height: 58px;
+  aspect-ratio: 1020 / 230;
   display: flex;
-  align-items: end;
+  align-items: center;
   justify-content: center;
-  padding-top: 13px;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0 4px;
   color: #493c35;
   font-family: var(--app-font-serif);
-  font-size: .9rem;
+  font-size: .82rem;
   letter-spacing: .015em;
+  line-height: 1.2;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .empty-polaroid {
   width: min(100%, 304px);
-  padding: 13px 13px 20px;
+  padding: 7.5% 7.5% 0;
   background: #f8f5ed;
   box-shadow: 0 17px 26px rgba(76, 45, 35, .15);
   transform: rotate(-1.5deg);
@@ -581,14 +655,20 @@
 }
 
 .empty-caption {
-  min-height: 58px;
+  aspect-ratio: 1020 / 230;
   display: flex;
-  align-items: end;
+  align-items: center;
   justify-content: center;
+  overflow: hidden;
+  padding: 0 4px;
   color: #9b8b78;
   font-family: var(--app-font-serif);
-  font-size: .84rem;
+  font-size: .82rem;
   font-style: italic;
+  line-height: 1.2;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .loading-card {
