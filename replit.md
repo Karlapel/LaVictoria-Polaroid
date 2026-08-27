@@ -1,6 +1,6 @@
-# [Project name]
+# LaVictoria Polaroid
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+LaVictoria Polaroid turns a photo from the user's device into a downloadable classic Polaroid-style keepsake.
 
 ## Run & Operate
 
@@ -14,31 +14,36 @@ _Replace the heading above with the project's name, and this line with one sente
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Frontend: React + Vite
+- Styling: Tailwind CSS v4
+- Icons: lucide-react
+- Image processing: browser Canvas API
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/lavictoria-polaroid/src/App.tsx` — upload, preview, reset, and download workflow
+- `artifacts/lavictoria-polaroid/src/index.css` — visual theme, layout, responsive behavior, and motion
+- `artifacts/lavictoria-polaroid/.replit-artifact/artifact.toml` — artifact and preview configuration
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Image processing stays client-side so user photos are never uploaded to a server.
+- The downloaded PNG is composed with the browser Canvas API to include the photo and full Polaroid frame.
+- The app is intentionally single-route and has no backend dependency.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Users can browse for or drag and drop an image.
+- Uploaded images are validated and previewed in a classic Polaroid frame.
+- Users can reset the current photo or download the finished PNG.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Keep the experience simple, clean, and focused on the photo.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- The web workflow supplies `PORT` and `BASE_PATH`; use the managed workflow for local preview.
 
 ## Pointers
 

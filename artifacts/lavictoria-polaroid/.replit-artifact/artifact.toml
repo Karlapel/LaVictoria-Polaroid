@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "LaVictoria Polaroid"
+description = "A browser-based photo tool that places uploaded images inside a classic Polaroid frame and lets users download the finished keepsake locally."
+version = "1.0.0"
+id = "artifacts/lavictoria-polaroid"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23231
+
+[services.development]
+run = "pnpm --filter @workspace/lavictoria-polaroid run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/lavictoria-polaroid", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/lavictoria-polaroid/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23231"
+BASE_PATH = "/"
