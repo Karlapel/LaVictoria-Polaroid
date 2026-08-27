@@ -503,6 +503,28 @@
   animation: float-in .5s ease both;
 }
 
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(248, 245, 237, .48);
+  backdrop-filter: blur(2px);
+}
+
+.loading-spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid rgba(117, 55, 76, .2);
+  border-top-color: hsl(var(--primary));
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .polaroid-caption {
   min-height: 58px;
   display: flex;

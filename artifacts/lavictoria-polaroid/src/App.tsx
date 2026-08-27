@@ -230,13 +230,13 @@ function Home() {
               )}
             </div>
 
-            <div className="polaroid-stage" data-testid="preview-stage" aria-live="polite">
-              {isLoading && image ? (
-                <div className="loading-card" data-testid="status-image-loading">
-                  <div className="loading-photo" />
-                  <div className="loading-line" />
-                </div>
-              ) : image ? (
+            <div
+              className="polaroid-stage"
+              data-testid="preview-stage"
+              aria-live="polite"
+              aria-busy={isLoading}
+            >
+              {image ? (
                 <div className="polaroid" data-testid="preview-polaroid">
                   <div className="polaroid-photo">
                     <img
@@ -249,6 +249,16 @@ function Home() {
                       }}
                       data-testid="img-photo-preview"
                     />
+                    {isLoading && (
+                      <div
+                        className="loading-overlay"
+                        data-testid="status-image-loading"
+                        role="status"
+                        aria-label="Loading photo preview"
+                      >
+                        <div className="loading-spinner" />
+                      </div>
+                    )}
                   </div>
                   <div className="polaroid-caption" data-testid="text-polaroid-caption">a little moment</div>
                 </div>
