@@ -308,6 +308,117 @@
   white-space: nowrap;
 }
 
+.format-field {
+  margin-top: 25px;
+}
+
+.format-field-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.format-label {
+  color: hsl(var(--foreground));
+  font-size: .73rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.format-hint {
+  color: hsl(var(--muted-foreground));
+  font-size: .7rem;
+}
+
+.format-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.format-option {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 9px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 9px;
+  background: rgba(250, 246, 236, .56);
+  color: hsl(var(--foreground));
+  text-align: left;
+  transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+.format-option:hover,
+.format-option.is-selected {
+  border-color: hsl(var(--primary) / .7);
+  background: rgba(250, 246, 236, .9);
+}
+
+.format-option:hover {
+  transform: translateY(-1px);
+}
+
+.format-option.is-selected {
+  box-shadow: 0 0 0 2px hsl(var(--primary) / .12);
+}
+
+.format-swatch {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 28px;
+  border: 1px solid hsl(var(--primary) / .62);
+  border-radius: 2px;
+  background: #f8f5ed;
+  box-shadow: inset 0 -6px 0 #f8f5ed, inset 0 0 0 4px #dfd2bf;
+}
+
+.format-swatch::after {
+  position: absolute;
+  right: 4px;
+  bottom: 3px;
+  left: 4px;
+  height: 4px;
+  background: #f8f5ed;
+  content: '';
+}
+
+.format-swatch-square {
+  width: 25px;
+  height: 25px;
+}
+
+.format-swatch-vertical {
+  width: 19px;
+}
+
+.format-option-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.format-option-copy strong {
+  overflow: hidden;
+  font-size: .68rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.format-option-copy small {
+  color: hsl(var(--muted-foreground));
+  font-size: .6rem;
+  line-height: 1.2;
+}
+
 .caption-field {
   margin-top: 22px;
 }
@@ -545,7 +656,7 @@
 
 .polaroid {
   width: min(100%, 304px);
-  padding: 7.5% 7.5% 0;
+  padding: var(--frame-top) var(--frame-side) 0;
   background: #f8f5ed;
   box-shadow: 0 17px 26px rgba(76, 45, 35, .23), 0 2px 4px rgba(76, 45, 35, .1);
   color: #322a26;
@@ -556,12 +667,91 @@
 .polaroid-photo {
   position: relative;
   display: grid;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: var(--photo-ratio);
   overflow: hidden;
   place-items: center;
   background:
     linear-gradient(145deg, rgba(117, 55, 76, .16), transparent 50%),
     #d8c7ae;
+}
+
+.polaroid-photo.is-framable {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.polaroid-photo.is-framable:active {
+  cursor: grabbing;
+}
+
+.polaroid-photo canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.framing-controls {
+  position: absolute;
+  right: 9px;
+  bottom: 9px;
+  left: 9px;
+  padding: 8px 9px 7px;
+  border: 1px solid rgba(248, 245, 237, .32);
+  border-radius: 7px;
+  background: rgba(50, 35, 31, .73);
+  color: #f8f5ed;
+  backdrop-filter: blur(5px);
+  cursor: default;
+}
+
+.framing-hint {
+  display: block;
+  margin-bottom: 4px;
+  font-size: .58rem;
+  letter-spacing: .1em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.framing-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.framing-slider-row input[type='range'] {
+  width: 100%;
+  min-width: 0;
+  height: 16px;
+  accent-color: #f8f5ed;
+  cursor: pointer;
+}
+
+.zoom-button {
+  display: grid;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 1px solid rgba(248, 245, 237, .5);
+  border-radius: 50%;
+  background: transparent;
+  color: #f8f5ed;
+  font-size: .92rem;
+  line-height: 1;
+}
+
+.zoom-button:hover {
+  background: rgba(248, 245, 237, .16);
+}
+
+.zoom-value {
+  min-width: 30px;
+  color: rgba(248, 245, 237, .84);
+  font-size: .6rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .polaroid-photo img {
@@ -594,7 +784,7 @@
 }
 
 .polaroid-caption {
-  aspect-ratio: 1020 / 230;
+  aspect-ratio: var(--caption-ratio);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -613,7 +803,7 @@
 
 .empty-polaroid {
   width: min(100%, 304px);
-  padding: 7.5% 7.5% 0;
+  padding: var(--frame-top) var(--frame-side) 0;
   background: #f8f5ed;
   box-shadow: 0 17px 26px rgba(76, 45, 35, .15);
   transform: rotate(-1.5deg);
@@ -622,7 +812,7 @@
 .empty-photo {
   position: relative;
   display: grid;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: var(--photo-ratio);
   place-items: center;
   overflow: hidden;
   background: #e7dcc9;
@@ -655,7 +845,7 @@
 }
 
 .empty-caption {
-  aspect-ratio: 1020 / 230;
+  aspect-ratio: var(--caption-ratio);
   display: flex;
   align-items: center;
   justify-content: center;

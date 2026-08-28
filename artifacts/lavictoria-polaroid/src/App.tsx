@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { type CSSProperties, useEffect, useRef, useState } from 'react';
 import {
   AlertCircle,
   Camera,
@@ -15,8 +15,97 @@ import {
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-const DEFAULT_CAPTION = 'a little moment';
 const MAX_CAPTION_LENGTH = 42;
+const FRAME_WIDTH = 1200;
+
+const FORMAT_CONFIG = {
+  square: {
+    label: 'Square',
+    ratioLabel: '1:1 photo',
+    photoWidth: 1020,
+    photoHeight: 1020,
+    sideInset: 90,
+    topInset: 90,
+    captionHeight: 230,
+  },
+  classic: {
+    label: 'Classic Polaroid',
+    ratioLabel: '4:3 photo',
+    photoWidth: 1020,
+    photoHeight: 765,
+    sideInset: 90,
+    topInset: 90,
+    captionHeight: 230,
+  },
+  vertical: {
+    label: 'Vertical',
+    ratioLabel: '4:5 photo',
+    photoWidth: 900,
+    photoHeight: 1125,
+    sideInset: 150,
+    topInset: 90,
+    captionHeight: 230,
+  },
+} as const;
+
+type PolaroidFormat = keyof typeof FORMAT_CONFIG;
+type FormatConfig = (typeof FORMAT_CONFIG)[PolaroidFormat];
+
+type DragState = {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  startPanX: number;
+  startPanY: number;
+  width: number;
+  height: number;
+};
+
+function getPanLimits(
+  source: HTMLImageElement,
+  formatConfig: FormatConfig,
+  zoom: number,
+) {
+  const baseScale = Math.max(
+    formatConfig.photoWidth / source.naturalWidth,
+    formatConfig.photoHeight / source.naturalHeight,
+  );
+  const drawWidth = source.naturalWidth * baseScale * zoom;
+  const drawHeight = source.naturalHeight * baseScale * zoom;
+
+  return {
+    x: Math.max(0, (drawWidth - formatConfig.photoWidth) / 2),
+    y: Math.max(0, (drawHeight - formatConfig.photoHeight) / 2),
+  };
+}
+
+function drawPhotoCrop(
+  context: CanvasRenderingContext2D,
+  source: HTMLImageElement,
+  formatConfig: FormatConfig,
+  zoom: number,
+  panX: number,
+  panY: number,
+) {
+  const baseScale = Math.max(
+    formatConfig.photoWidth / source.naturalWidth,
+    formatConfig.photoHeight / source.naturalHeight,
+  );
+  const drawWidth = source.naturalWidth * baseScale * zoom;
+  const drawHeight = source.naturalHeight * baseScale * zoom;
+  const panLimits = getPanLimits(source, formatConfig, zoom);
+  const offsetX = (panX / 100) * panLimits.x;
+  const offsetY = (panY / 100) * panLimits.y;
+  const drawX = (formatConfig.photoWidth - drawWidth) / 2 + offsetX;
+  const drawY = (formatConfig.photoHeight - drawHeight) / 2 + offsetY;
+
+  context.save();
+  context.beginPath();
+  context.rect(0, 0, formatConfig.photoWidth, formatConfig.photoHeight);
+  context.clip();
+  context.drawImage(source, drawX, drawY, drawWidth, drawHeight);
+  context.restore();
+}
 
 type ImageFile = {
   file: File;
@@ -25,19 +114,76 @@ type ImageFile = {
 
 function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const dragRef = useRef<DragState | null>(null);
   const [image, setImage] = useState<ImageFile | null>(null);
+  const [sourceImage, setSourceImage] = useState<HTMLImageElement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState('');
   const [downloaded, setDownloaded] = useState(false);
-  const [caption, setCaption] = useState(DEFAULT_CAPTION);
-  const displayCaption = caption.trim() || DEFAULT_CAPTION;
+  const [caption, setCaption] = useState('');
+  const [format, setFormat] = useState<PolaroidFormat>('classic');
+  const [zoom, setZoom] = useState(1);
+  const [panX, setPanX] = useState(0);
+  const [panY, setPanY] = useState(0);
+  const displayCaption = caption.trim();
+  const formatConfig = FORMAT_CONFIG[format];
+  const frameStyle = {
+    '--frame-side': `${(formatConfig.sideInset / FRAME_WIDTH) * 100}%`,
+    '--frame-top': `${(formatConfig.topInset / FRAME_WIDTH) * 100}%`,
+    '--photo-ratio': `${formatConfig.photoWidth} / ${formatConfig.photoHeight}`,
+    '--caption-ratio': `${formatConfig.photoWidth} / ${formatConfig.captionHeight}`,
+  } as CSSProperties;
 
   useEffect(() => {
     return () => {
       if (image?.url) URL.revokeObjectURL(image.url);
     };
   }, [image]);
+
+  useEffect(() => {
+    setSourceImage(null);
+    if (!image) return;
+
+    let cancelled = false;
+    const nextImage = new window.Image();
+    nextImage.onload = () => {
+      if (cancelled) return;
+      setSourceImage(nextImage);
+      setIsLoading(false);
+    };
+    nextImage.onerror = () => {
+      if (cancelled) return;
+      setIsLoading(false);
+      setError('That image could not be read. Please choose another photo.');
+    };
+    nextImage.src = image.url;
+
+    return () => {
+      cancelled = true;
+      nextImage.onload = null;
+      nextImage.onerror = null;
+    };
+  }, [image]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    canvas.width = formatConfig.photoWidth;
+    canvas.height = formatConfig.photoHeight;
+    const context = canvas.getContext('2d');
+    if (!context) return;
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = '#d8c7ae';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (sourceImage) {
+      drawPhotoCrop(context, sourceImage, formatConfig, zoom, panX, panY);
+    }
+  }, [formatConfig, panX, panY, sourceImage, zoom]);
 
   const validateAndLoad = (file?: File) => {
     if (!file) return;
@@ -54,6 +200,9 @@ function Home() {
     }
 
     setIsLoading(true);
+    setZoom(1);
+    setPanX(0);
+    setPanY(0);
     const nextUrl = URL.createObjectURL(file);
     setImage((current) => {
       if (current?.url) URL.revokeObjectURL(current.url);
@@ -76,63 +225,99 @@ function Home() {
     if (image?.url) URL.revokeObjectURL(image.url);
     setImage(null);
     setIsLoading(false);
+    setSourceImage(null);
+    setZoom(1);
+    setPanX(0);
+    setPanY(0);
     setDownloaded(false);
     setError('');
   };
 
+  const updateZoom = (nextZoom: number) => {
+    setZoom(Math.min(3, Math.max(1, nextZoom)));
+    setDownloaded(false);
+  };
+
+  const handlePhotoPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!sourceImage || (event.target as HTMLElement).closest('button, input')) return;
+
+    const bounds = event.currentTarget.getBoundingClientRect();
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      startPanX: panX,
+      startPanY: panY,
+      width: bounds.width,
+      height: bounds.height,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handlePhotoPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (!drag || !sourceImage) return;
+
+    const panLimits = getPanLimits(sourceImage, formatConfig, zoom);
+    const displayedLimitX = panLimits.x * (drag.width / formatConfig.photoWidth);
+    const displayedLimitY = panLimits.y * (drag.height / formatConfig.photoHeight);
+    const deltaX = displayedLimitX ? ((event.clientX - drag.startX) / displayedLimitX) * 100 : 0;
+    const deltaY = displayedLimitY ? ((event.clientY - drag.startY) / displayedLimitY) * 100 : 0;
+
+    setPanX(Math.min(100, Math.max(-100, drag.startPanX + deltaX)));
+    setPanY(Math.min(100, Math.max(-100, drag.startPanY + deltaY)));
+    setDownloaded(false);
+  };
+
+  const finishPhotoDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (dragRef.current?.pointerId === event.pointerId) {
+      dragRef.current = null;
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+    }
+  };
+
   const downloadPolaroid = async () => {
-    if (!image || isLoading) return;
+    if (!image || !sourceImage || isLoading) return;
     setError('');
 
     try {
-      const source = new window.Image();
-      source.src = image.url;
-      await source.decode();
-
       const canvas = document.createElement('canvas');
-      const frameWidth = 1200;
-      const photoSize = 1020;
-      const sideInset = 90;
-      const topInset = 90;
-      const captionHeight = 230;
-      canvas.width = frameWidth;
-      canvas.height = topInset + photoSize + captionHeight;
+      const {
+        photoWidth,
+        photoHeight,
+        sideInset,
+        topInset,
+        captionHeight,
+      } = formatConfig;
+      canvas.width = FRAME_WIDTH;
+      canvas.height = topInset + photoHeight + captionHeight;
       const context = canvas.getContext('2d');
       if (!context) throw new Error('Canvas is unavailable');
 
       context.fillStyle = '#f8f5ed';
       context.fillRect(0, 0, canvas.width, canvas.height);
       context.fillStyle = '#dfd2bf';
-      context.fillRect(sideInset, topInset, photoSize, photoSize);
+      context.fillRect(sideInset, topInset, photoWidth, photoHeight);
 
-      // Match the preview's object-fit: cover behavior. Crop the source to a
-      // centered square before drawing it into the bounded photo rectangle so
-      // pixels can never bleed into the frame or caption area.
-      const sourceSize = Math.min(source.naturalWidth, source.naturalHeight);
-      const sourceX = (source.naturalWidth - sourceSize) / 2;
-      const sourceY = (source.naturalHeight - sourceSize) / 2;
-      context.drawImage(
-        source,
-        sourceX,
-        sourceY,
-        sourceSize,
-        sourceSize,
-        sideInset,
-        topInset,
-        photoSize,
-        photoSize,
-      );
+      context.save();
+      context.translate(sideInset, topInset);
+      drawPhotoCrop(context, sourceImage, formatConfig, zoom, panX, panY);
+      context.restore();
 
-      context.fillStyle = '#493c35';
-      context.textAlign = 'center';
-      context.textBaseline = 'middle';
-      context.font = '500 52px Georgia, serif';
-      context.fillText(
-        displayCaption,
-        frameWidth / 2,
-        topInset + photoSize + captionHeight / 2,
-        photoSize,
-      );
+      if (displayCaption) {
+        context.fillStyle = '#493c35';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.font = '500 52px Georgia, serif';
+        context.fillText(
+          displayCaption,
+          FRAME_WIDTH / 2,
+          topInset + photoHeight + captionHeight / 2,
+          photoWidth,
+        );
+      }
 
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
       if (!blob) throw new Error('Could not make the image');
@@ -205,6 +390,40 @@ function Home() {
               <p className="file-note"><FileImage size={13} /> JPG, PNG, WEBP, or GIF · up to 20 MB</p>
             </label>
 
+            <div className="format-field">
+              <div className="format-field-header">
+                <label className="format-label">Polaroid format</label>
+                <span className="format-hint">choose your frame shape</span>
+              </div>
+              <div className="format-options" role="radiogroup" aria-label="Polaroid format">
+                {(Object.keys(FORMAT_CONFIG) as PolaroidFormat[]).map((option) => {
+                  const optionConfig = FORMAT_CONFIG[option];
+                  const isSelected = option === format;
+
+                  return (
+                    <button
+                      key={option}
+                      className={`format-option${isSelected ? ' is-selected' : ''}`}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSelected}
+                      onClick={() => {
+                        setFormat(option);
+                        setDownloaded(false);
+                      }}
+                      data-testid={`button-format-${option}`}
+                    >
+                      <span className={`format-swatch format-swatch-${option}`} aria-hidden="true" />
+                      <span className="format-option-copy">
+                        <strong>{optionConfig.label}</strong>
+                        <small>{optionConfig.ratioLabel}</small>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="caption-field">
               <div className="caption-field-header">
                 <label className="caption-label" htmlFor="polaroid-caption">
@@ -276,17 +495,19 @@ function Home() {
               aria-busy={isLoading}
             >
               {image ? (
-                <div className="polaroid" data-testid="preview-polaroid">
-                  <div className="polaroid-photo">
-                    <img
-                      src={image.url}
-                      alt={`Preview of ${image.file.name}`}
-                      onLoad={() => setIsLoading(false)}
-                      onError={() => {
-                        setIsLoading(false);
-                        setError('That image could not be read. Please choose another photo.');
-                      }}
-                      data-testid="img-photo-preview"
+                <div className="polaroid" style={frameStyle} data-testid="preview-polaroid">
+                  <div
+                    className={`polaroid-photo${sourceImage ? ' is-framable' : ''}`}
+                    onPointerDown={handlePhotoPointerDown}
+                    onPointerMove={handlePhotoPointerMove}
+                    onPointerUp={finishPhotoDrag}
+                    onPointerCancel={finishPhotoDrag}
+                  >
+                    <canvas
+                      ref={canvasRef}
+                      role="img"
+                      aria-label={`Preview of ${image.file.name}`}
+                      data-testid="canvas-photo-preview"
                     />
                     {isLoading && (
                       <div
@@ -298,13 +519,52 @@ function Home() {
                         <div className="loading-spinner" />
                       </div>
                     )}
+                    {sourceImage && (
+                      <div
+                        className="framing-controls"
+                        onPointerDown={(event) => event.stopPropagation()}
+                      >
+                        <span className="framing-hint">Drag to frame</span>
+                        <div className="framing-slider-row">
+                          <button
+                            className="zoom-button"
+                            type="button"
+                            onClick={() => updateZoom(zoom - 0.1)}
+                            aria-label="Zoom out"
+                            data-testid="button-zoom-out"
+                          >
+                            −
+                          </button>
+                          <input
+                            type="range"
+                            min="1"
+                            max="3"
+                            step="0.01"
+                            value={zoom}
+                            onChange={(event) => updateZoom(Number(event.target.value))}
+                            aria-label="Photo zoom"
+                            data-testid="input-photo-zoom"
+                          />
+                          <button
+                            className="zoom-button"
+                            type="button"
+                            onClick={() => updateZoom(zoom + 0.1)}
+                            aria-label="Zoom in"
+                            data-testid="button-zoom-in"
+                          >
+                            +
+                          </button>
+                          <span className="zoom-value">{Math.round(zoom * 100)}%</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="polaroid-caption" data-testid="text-polaroid-caption">
                     {displayCaption}
                   </div>
                 </div>
               ) : (
-                <div className="empty-polaroid" data-testid="empty-preview-state">
+                <div className="empty-polaroid" style={frameStyle} data-testid="empty-preview-state">
                   <div className="empty-photo">
                     <span className="empty-photo-mark" aria-hidden="true">
                       <Camera size={22} strokeWidth={1.5} />
@@ -326,7 +586,7 @@ function Home() {
               {downloaded ? 'Saved to your downloads' : 'Download your Polaroid'}
             </button>
             <p className="shortcut" data-testid="text-download-hint">
-              {image ? 'A PNG matching the frame you see above.' : 'Choose a photo to unlock the download.'}
+              {image ? `A PNG matching the ${formatConfig.label} frame you see above.` : 'Choose a photo to unlock the download.'}
             </p>
           </section>
         </div>
