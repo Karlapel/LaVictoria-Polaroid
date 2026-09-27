@@ -141,6 +141,18 @@ async function renderPolaroidBlob(
   caption: string,
 ) {
   const canvas = document.createElement('canvas');
+  drawPolaroidCanvas(canvas, sourceImage, formatConfig, framing, caption);
+
+  return new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+}
+
+function drawPolaroidCanvas(
+  canvas: HTMLCanvasElement,
+  sourceImage: HTMLImageElement | null,
+  formatConfig: FormatConfig,
+  framing: FramingState,
+  caption: string,
+) {
   const {
     photoWidth,
     photoHeight,
@@ -158,17 +170,19 @@ async function renderPolaroidBlob(
   context.fillStyle = '#dfd2bf';
   context.fillRect(sideInset, topInset, photoWidth, photoHeight);
 
-  context.save();
-  context.translate(sideInset, topInset);
-  drawPhotoCrop(
-    context,
-    sourceImage,
-    formatConfig,
-    framing.zoom,
-    framing.panX,
-    framing.panY,
-  );
-  context.restore();
+  if (sourceImage) {
+    context.save();
+    context.translate(sideInset, topInset);
+    drawPhotoCrop(
+      context,
+      sourceImage,
+      formatConfig,
+      framing.zoom,
+      framing.panX,
+      framing.panY,
+    );
+    context.restore();
+  }
 
   if (caption) {
     context.fillStyle = '#493c35';
@@ -182,8 +196,235 @@ async function renderPolaroidBlob(
       photoWidth,
     );
   }
+}
 
-  return new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+const A4_WIDTH_MM = 210;
+const A4_HEIGHT_MM = 297;
+const A4_QUANTITIES = [4, 6, 9, 12] as const;
+type A4Quantity = (typeof A4_QUANTITIES)[number];
+
+type MountPhoto = {
+  id: string;
+  fileName: string;
+  sourceImage: HTMLImageElement | null;
+  zoom: number;
+  panX: number;
+  panY: number;
+  caption: string;
+};
+
+type A4Placement = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
+
+type A4Layout = {
+  columns: number;
+  rows: number;
+  margin: number;
+  gap: number;
+  placements: A4Placement[];
+};
+
+function getA4Layout(quantity: A4Quantity, formatConfig: FormatConfig): A4Layout {
+  const candidates: Record<A4Quantity, Array<[number, number]>> = {
+    4: [[2, 2], [1, 4], [4, 1]],
+    6: [[2, 3], [3, 2], [1, 6], [6, 1]],
+    9: [[3, 3]],
+    12: [[3, 4], [4, 3], [2, 6], [6, 2]],
+  };
+  const margin = quantity === 4 ? 16 : quantity === 6 ? 13 : quantity === 9 ? 10 : 8;
+  const gap = quantity === 4 ? 8 : quantity === 6 ? 6 : quantity === 9 ? 5 : 4;
+  const frameRatio = FRAME_WIDTH / (formatConfig.topInset + formatConfig.photoHeight + formatConfig.captionHeight);
+
+  const bestGrid = candidates[quantity].reduce((best, [columns, rows]) => {
+    const cellWidth = (A4_WIDTH_MM - margin * 2 - gap * (columns - 1)) / columns;
+    const cellHeight = (A4_HEIGHT_MM - margin * 2 - gap * (rows - 1)) / rows;
+    const cardWidth = Math.min(cellWidth, cellHeight * frameRatio);
+    const score = cardWidth * (cardWidth / frameRatio);
+    return score > best.score ? { columns, rows, score } : best;
+  }, { columns: candidates[quantity][0][0], rows: candidates[quantity][0][1], score: -1 });
+
+  const { columns, rows } = bestGrid;
+  const innerWidth = A4_WIDTH_MM - margin * 2;
+  const innerHeight = A4_HEIGHT_MM - margin * 2;
+  const cellWidth = (innerWidth - gap * (columns - 1)) / columns;
+  const cellHeight = (innerHeight - gap * (rows - 1)) / rows;
+  const cardWidth = Math.min(cellWidth, cellHeight * frameRatio);
+  const cardHeight = cardWidth / frameRatio;
+  const placements = Array.from({ length: quantity }, (_, index) => {
+    const column = index % columns;
+    const row = Math.floor(index / columns);
+    return {
+      left: margin + column * (cellWidth + gap) + (cellWidth - cardWidth) / 2,
+      top: margin + row * (cellHeight + gap) + (cellHeight - cardHeight) / 2,
+      width: cardWidth,
+      height: cardHeight,
+    };
+  });
+
+  return { columns, rows, margin, gap, placements };
+}
+
+function A4PolaroidCanvas({
+  photo,
+  formatConfig,
+}: {
+  photo: MountPhoto;
+  formatConfig: FormatConfig;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.width = formatConfig.photoWidth;
+    canvas.height = formatConfig.photoHeight;
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    context.fillStyle = '#d8c7ae';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    if (photo.sourceImage) {
+      drawPhotoCrop(
+        context,
+        photo.sourceImage,
+        formatConfig,
+        photo.zoom,
+        photo.panX,
+        photo.panY,
+      );
+    }
+  }, [formatConfig, photo.caption, photo.panX, photo.panY, photo.sourceImage, photo.zoom]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      role="img"
+      aria-label={`A4 preview of ${photo.fileName}`}
+    />
+  );
+}
+
+function A4PagePreview({
+  items,
+  pageNumber,
+  totalPages,
+  quantity,
+  formatConfig,
+}: {
+  items: MountPhoto[];
+  pageNumber: number;
+  totalPages: number;
+  quantity: A4Quantity;
+  formatConfig: FormatConfig;
+}) {
+  const layout = getA4Layout(quantity, formatConfig);
+  const frameStyle = {
+    '--a4-frame-side': `${(formatConfig.sideInset / FRAME_WIDTH) * 100}%`,
+    '--a4-frame-top': `${(formatConfig.topInset / FRAME_WIDTH) * 100}%`,
+    '--a4-photo-ratio': `${formatConfig.photoWidth} / ${formatConfig.photoHeight}`,
+    '--a4-caption-ratio': `${formatConfig.photoWidth} / ${formatConfig.captionHeight}`,
+    '--a4-frame-ratio': `${FRAME_WIDTH} / ${formatConfig.topInset + formatConfig.photoHeight + formatConfig.captionHeight}`,
+  } as CSSProperties;
+
+  return (
+    <article className="a4-page-card" data-testid={`a4-page-preview-${pageNumber}`}>
+      <div className="a4-page-surface" aria-label={`A4 sheet ${pageNumber} of ${totalPages}`}>
+        {items.map((photo, index) => {
+          const placement = layout.placements[index];
+          return (
+            <div
+              className="a4-polaroid"
+              key={`${photo.id}-${pageNumber}-${index}`}
+              style={{
+                ...frameStyle,
+                left: `${(placement.left / A4_WIDTH_MM) * 100}%`,
+                top: `${(placement.top / A4_HEIGHT_MM) * 100}%`,
+                width: `${(placement.width / A4_WIDTH_MM) * 100}%`,
+                height: `${(placement.height / A4_HEIGHT_MM) * 100}%`,
+              }}
+            >
+              <div className="a4-polaroid-photo">
+                <A4PolaroidCanvas photo={photo} formatConfig={formatConfig} />
+              </div>
+              <div className="a4-polaroid-caption">{photo.caption.trim()}</div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="a4-page-meta">
+        <span>Page {pageNumber} of {totalPages}</span>
+        <span>A4 · 210 × 297 mm</span>
+      </div>
+    </article>
+  );
+}
+
+function A4MountingStage({
+  items,
+  formatConfig,
+}: {
+  items: MountPhoto[];
+  formatConfig: FormatConfig;
+}) {
+  const [quantity, setQuantity] = useState<A4Quantity>(6);
+  const pageCount = Math.max(1, Math.ceil(items.length / quantity));
+  const pages = Array.from({ length: pageCount }, (_, pageIndex) => (
+    items.slice(pageIndex * quantity, (pageIndex + 1) * quantity)
+  ));
+
+  return (
+    <section className="a4-mounting-stage" aria-labelledby="a4-mounting-heading" data-testid="a4-mounting-stage">
+      <div className="a4-mounting-header">
+        <div>
+          <p className="eyebrow a4-eyebrow">04 / Print mounting</p>
+          <h2 id="a4-mounting-heading">Set the keepsakes on A4.</h2>
+          <p className="a4-mounting-copy">
+            A true A4 sheet, balanced for trimming. Your current framing, captions, and photo order are carried through automatically.
+          </p>
+        </div>
+        <div className="a4-page-count" data-testid="text-a4-page-count">
+          <strong>{pageCount}</strong>
+          <span>{pageCount === 1 ? 'sheet' : 'sheets'} to review</span>
+        </div>
+      </div>
+
+      <div className="a4-quantity-field">
+        <span className="format-label">Polaroids per sheet</span>
+        <div className="a4-quantity-options" role="radiogroup" aria-label="Polaroids per A4 sheet">
+          {A4_QUANTITIES.map((option) => (
+            <button
+              className={`a4-quantity-option${quantity === option ? ' is-selected' : ''}`}
+              type="button"
+              role="radio"
+              aria-checked={quantity === option}
+              onClick={() => setQuantity(option)}
+              data-testid={`button-a4-quantity-${option}`}
+              key={option}
+            >
+              <strong>{option}</strong>
+              <small>per sheet</small>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="a4-page-gallery">
+        {pages.map((pageItems, pageIndex) => (
+          <A4PagePreview
+            key={`a4-page-${pageIndex + 1}-${quantity}`}
+            items={pageItems}
+            pageNumber={pageIndex + 1}
+            totalPages={pageCount}
+            quantity={quantity}
+            formatConfig={formatConfig}
+          />
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function triggerBlobDownload(blob: Blob, filename: string) {
@@ -676,6 +917,35 @@ function Home() {
   const outputCount = appMode === 'single'
     ? 1
     : multipleMode === 'repeat' ? repeatCount : multiPhotos.length;
+  const mountPhotos: MountPhoto[] = appMode === 'single'
+    ? (image ? [{
+      id: 'single-photo',
+      fileName: image.file.name,
+      sourceImage,
+      zoom,
+      panX,
+      panY,
+      caption,
+    }] : [])
+    : (multipleMode === 'repeat'
+      ? (activePhoto ? Array.from({ length: repeatCount }, (_, index) => ({
+        id: `${activePhoto.id}-repeat-${index}`,
+        fileName: activePhoto.file.name,
+        sourceImage: activePhoto.sourceImage,
+        zoom: activePhoto.zoom,
+        panX: activePhoto.panX,
+        panY: activePhoto.panY,
+        caption: activePhoto.caption,
+      })) : [])
+      : multiPhotos.map((photo) => ({
+        id: photo.id,
+        fileName: photo.file.name,
+        sourceImage: photo.sourceImage,
+        zoom: photo.zoom,
+        panX: photo.panX,
+        panY: photo.panY,
+        caption: photo.caption,
+      })));
 
   return (
     <div className={`app-shell${appMode === 'multiple' ? ' is-multiple-mode' : ''}`}>
@@ -1192,6 +1462,10 @@ function Home() {
             </p>
           </section>
         </div>
+
+        {mountPhotos.length > 0 && (
+          <A4MountingStage items={mountPhotos} formatConfig={formatConfig} />
+        )}
 
         <div className="footer-line" data-testid="text-footer">one photo · one keepsake · made locally</div>
       </main>

@@ -1,0 +1,421 @@
+Agora vamos iniciar a próxima etapa do projeto **LaVictoria Polaroid: MONTAGEM PARA IMPRESSÃO EM A4**.
+
+IMPORTANTE: o editor atual está funcionando muito bem. NÃO recrie o projeto e NÃO altere a lógica que já funciona.
+
+Preserve integralmente:
+
+* upload de fotos;
+* múltiplas fotos;
+* foto única;
+* conjunto de fotos;
+* edição individual;
+* zoom;
+* posicionamento/enquadramento;
+* formatos de Polaroid existentes;
+* legendas individuais;
+* repetição de fotos;
+* prévia atual;
+* responsividade;
+* organização corrigida no celular.
+
+A nova funcionalidade deve ser adicionada depois do conjunto de fotos/prévia, sem quebrar o fluxo existente.
+
+━━━━━━━━━━━━━━━━━━━━
+OBJETIVO DESTA ETAPA
+━━━━━━━━━━━━━━━━━━━━
+
+Criar uma nova etapa chamada:
+
+**MONTAGEM PARA IMPRESSÃO**
+
+O objetivo é pegar o conjunto de Polaroids que o usuário acabou de criar e organizá-lo automaticamente em uma folha A4.
+
+Nesta primeira implementação, NÃO gerar PDF ainda.
+
+Primeiro queremos visualizar corretamente a folha A4 na tela.
+
+O PDF será implementado em uma etapa posterior usando exatamente essa mesma estrutura.
+
+━━━━━━━━━━━━━━━━━━━━
+
+1. NOVA ETAPA
+   ━━━━━━━━━━━━━━━━━━━━
+
+Depois que o usuário finalizar o conjunto de fotos, disponibilizar uma etapa:
+
+**4. Montagem para impressão**
+
+Essa etapa deve receber exatamente as Polaroids já criadas.
+
+Não deve pedir para o usuário fazer upload novamente.
+
+Não deve perder:
+
+* fotos;
+* enquadramentos;
+* zoom;
+* posições;
+* formatos;
+* legendas;
+* ordem;
+* repetições.
+
+Tudo deve ser reutilizado do conjunto existente.
+
+━━━━━━━━━━━━━━━━━━━━
+2. ESCOLHA DA QUANTIDADE POR FOLHA
+━━━━━━━━━━━━━━━━━━━━
+
+Criar uma área simples:
+
+**Quantas Polaroids por folha A4?**
+
+Opções:
+
+* 4 por folha
+* 6 por folha
+* 9 por folha
+* 12 por folha
+
+As opções devem ser visualmente claras e fáceis de selecionar.
+
+Ao escolher uma quantidade, a prévia da folha deve ser atualizada automaticamente.
+
+━━━━━━━━━━━━━━━━━━━━
+3. PRÉVIA DA FOLHA A4
+━━━━━━━━━━━━━━━━━━━━
+
+Mostrar uma representação visual de uma folha A4 na tela.
+
+A folha deve ter proporção A4.
+
+Dentro dela, distribuir automaticamente as Polaroids escolhidas.
+
+Exemplo para 4:
+
+┌────────────────────────────┐
+│                            │
+│   [ POLAROID ] [ POLAROID ]│
+│                            │
+│   [ POLAROID ] [ POLAROID ]│
+│                            │
+└────────────────────────────┘
+
+Para 6:
+
+┌────────────────────────────┐
+│ [P] [P]                    │
+│ [P] [P]                    │
+│ [P] [P]                    │
+└────────────────────────────┘
+
+Para 9:
+
+┌────────────────────────────┐
+│ [P] [P] [P]                │
+│ [P] [P] [P]                │
+│ [P] [P] [P]                │
+└────────────────────────────┘
+
+Para 12:
+
+┌────────────────────────────┐
+│ [P] [P] [P]                │
+│ [P] [P] [P]                │
+│ [P] [P] [P]                │
+│ [P] [P] [P]                │
+└────────────────────────────┘
+
+Esses desenhos são apenas exemplos conceituais.
+
+O sistema deve calcular automaticamente o tamanho e a posição das Polaroids.
+
+━━━━━━━━━━━━━━━━━━━━
+4. USAR TAMANHO REAL A4
+━━━━━━━━━━━━━━━━━━━━
+
+A estrutura deve ser baseada na proporção e nas dimensões reais do papel A4:
+
+210 mm × 297 mm.
+
+Não usar apenas uma imagem arbitrária chamada "A4".
+
+Criar uma representação escalável que permita futuramente gerar um PDF físico corretamente.
+
+A visualização na tela pode ser ampliada/reduzida, mas a proporção do papel precisa permanecer A4.
+
+━━━━━━━━━━━━━━━━━━━━
+5. MARGENS E ESPAÇAMENTO
+━━━━━━━━━━━━━━━━━━━━
+
+Criar uma estrutura que permita futuramente controlar:
+
+* margem da folha;
+* espaço entre Polaroids;
+* alinhamento.
+
+Nesta primeira etapa, usar valores automáticos e equilibrados.
+
+NÃO criar dezenas de controles.
+
+O usuário deve apenas escolher 4, 6, 9 ou 12.
+
+O sistema calcula o restante.
+
+━━━━━━━━━━━━━━━━━━━━
+6. VÁRIAS PÁGINAS
+━━━━━━━━━━━━━━━━━━━━
+
+É MUITO IMPORTANTE preparar o sistema para conjuntos maiores que uma folha.
+
+Exemplo:
+
+Se o usuário tiver:
+
+10 fotos
+
+e escolher:
+
+4 por folha
+
+o sistema deve entender:
+
+Folha 1 → fotos 1, 2, 3, 4
+Folha 2 → fotos 5, 6, 7, 8
+Folha 3 → fotos 9, 10
+
+Nesta primeira etapa, mostrar as páginas na interface de forma organizada.
+
+Não é necessário gerar PDF ainda.
+
+Também mostrar algo como:
+
+**3 folhas A4**
+
+ou:
+
+**Folha 1 de 3**
+
+━━━━━━━━━━━━━━━━━━━━
+7. ORDEM DAS FOTOS
+━━━━━━━━━━━━━━━━━━━━
+
+A ordem precisa ser exatamente a ordem do conjunto anterior.
+
+Foto 1 continua sendo Foto 1.
+
+Foto 2 continua sendo Foto 2.
+
+Não reorganizar aleatoriamente.
+
+Não inverter.
+
+Não ordenar pelo nome do arquivo.
+
+Respeitar exatamente a ordem definida pelo usuário.
+
+━━━━━━━━━━━━━━━━━━━━
+8. REPETIÇÃO DE FOTOS
+━━━━━━━━━━━━━━━━━━━━
+
+Respeitar a função de repetição já existente.
+
+Se o usuário escolheu repetir uma foto, essa repetição deve aparecer normalmente na montagem A4.
+
+Exemplo:
+
+Foto 1
+Foto 1
+Foto 2
+Foto 3
+
+deve resultar exatamente nessa ordem na folha.
+
+━━━━━━━━━━━━━━━━━━━━
+9. MODELO DA POLAROID
+━━━━━━━━━━━━━━━━━━━━
+
+A montagem A4 deve usar exatamente o modelo de Polaroid escolhido anteriormente.
+
+Não criar um novo modelo.
+
+Não alterar:
+
+* formato;
+* proporção;
+* legenda;
+* enquadramento;
+* aparência.
+
+A montagem A4 apenas organiza os resultados já criados.
+
+━━━━━━━━━━━━━━━━━━━━
+10. RESPONSIVIDADE
+━━━━━━━━━━━━━━━━━━━━
+
+A prévia A4 precisa funcionar em:
+
+* computador;
+* notebook;
+* tablet;
+* celular.
+
+No celular, a folha A4 pode ser apresentada em escala menor, com zoom visual se necessário.
+
+Não permitir rolagem horizontal desnecessária.
+
+A proporção A4 não pode ser distorcida.
+
+━━━━━━━━━━━━━━━━━━━━
+11. NAVEGAÇÃO
+━━━━━━━━━━━━━━━━━━━━
+
+Manter o fluxo:
+
+1. Escolher fotos
+2. Editar/organizar
+3. Conferir conjunto
+4. Montagem para impressão
+
+Permitir voltar para etapas anteriores sem perder os dados.
+
+Se o usuário voltar para editar uma foto e depois retornar à montagem A4, a montagem deve ser recalculada com a nova versão da foto.
+
+━━━━━━━━━━━━━━━━━━━━
+12. NÃO GERAR PDF AINDA
+━━━━━━━━━━━━━━━━━━━━
+
+Nesta etapa NÃO implementar a geração definitiva do PDF.
+
+Primeiro precisamos validar visualmente a montagem.
+
+Criar apenas a estrutura necessária para que a próxima etapa consiga gerar um PDF A4 usando os mesmos dados e posições.
+
+Não adicionar bibliotecas desnecessárias se não forem necessárias agora.
+
+━━━━━━━━━━━━━━━━━━━━
+13. PREPARAR PARA FUTURO
+━━━━━━━━━━━━━━━━━━━━
+
+Estruturar o código para que futuramente possamos adicionar:
+
+* PDF A4;
+* download;
+* impressão;
+* qualidade adequada para impressão;
+* medidas físicas precisas;
+* margem personalizada;
+* espaçamento personalizado;
+* orientação da folha;
+* eventualmente outros tamanhos de papel.
+
+Mas NÃO implementar essas funções agora.
+
+━━━━━━━━━━━━━━━━━━━━
+14. NÃO ALTERAR O EDITOR ATUAL
+━━━━━━━━━━━━━━━━━━━━
+
+Esta regra é fundamental.
+
+O editor de fotos atual está funcionando corretamente.
+
+Não modificar:
+
+* upload;
+* zoom;
+* crop;
+* movimentação;
+* legendas;
+* seleção individual;
+* repetição;
+* modelos existentes.
+
+A montagem A4 deve consumir os dados existentes.
+
+Se precisar criar novos componentes, prefira criar componentes separados para a montagem A4 em vez de modificar profundamente os componentes do editor.
+
+━━━━━━━━━━━━━━━━━━━━
+15. TESTES OBRIGATÓRIOS
+━━━━━━━━━━━━━━━━━━━━
+
+Depois de implementar, testar:
+
+TESTE 1
+4 fotos + 4 por folha.
+
+Resultado esperado:
+1 folha.
+
+TESTE 2
+6 fotos + 4 por folha.
+
+Resultado esperado:
+2 folhas.
+
+TESTE 3
+9 fotos + 9 por folha.
+
+Resultado esperado:
+1 folha.
+
+TESTE 4
+12 fotos + 12 por folha.
+
+Resultado esperado:
+1 folha.
+
+TESTE 5
+13 fotos + 12 por folha.
+
+Resultado esperado:
+2 folhas.
+
+TESTE 6
+Verificar se as legendas continuam aparecendo.
+
+TESTE 7
+Verificar se o enquadramento individual das fotos continua exatamente igual.
+
+TESTE 8
+Alterar uma foto no editor e retornar à montagem.
+
+Confirmar que a montagem é atualizada.
+
+TESTE 9
+Testar no computador e no celular.
+
+━━━━━━━━━━━━━━━━━━━━
+16. CRITÉRIO DE SUCESSO
+━━━━━━━━━━━━━━━━━━━━
+
+Considerarei esta etapa concluída quando:
+
+* existir a etapa "Montagem para impressão";
+* for possível escolher 4, 6, 9 ou 12 por folha;
+* aparecer uma folha A4 visualmente organizada;
+* as Polaroids forem distribuídas automaticamente;
+* conjuntos maiores criarem várias páginas;
+* a ordem das fotos for preservada;
+* as edições individuais forem preservadas;
+* as legendas forem preservadas;
+* o modelo escolhido for preservado;
+* voltar e editar uma foto atualizar a montagem;
+* nada do editor atual for quebrado.
+
+IMPORTANTE:
+
+Se alguma parte da implementação entrar em conflito com uma função atual, preserve a função atual e interrompa apenas a parte nova que estiver causando o conflito.
+
+Não recrie o projeto.
+
+Não apague funcionalidades.
+
+Não altere a identidade visual atual.
+
+Ao finalizar, informe:
+
+* arquivos criados/alterados;
+* como a montagem A4 foi implementada;
+* como estão sendo tratadas várias páginas;
+* quais testes foram realizados;
+* se existe alguma limitação que devemos resolver antes de implementar o PDF.
