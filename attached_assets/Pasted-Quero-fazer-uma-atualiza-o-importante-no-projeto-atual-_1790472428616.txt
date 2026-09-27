@@ -1,0 +1,497 @@
+Quero fazer uma atualização importante no projeto atual chamado **LaVictoria Polaroid**.
+
+ATENÇÃO: NÃO recrie o projeto do zero. NÃO apague nem substitua funcionalidades que já estão funcionando. Trabalhe sobre o código atual e preserve tudo que já funciona.
+
+O objetivo desta tarefa é principalmente reorganizar e melhorar a interface, especialmente o fluxo de várias fotos, deixando o sistema mais bonito, profissional, intuitivo e funcional tanto no computador quanto no celular.
+
+Antes de alterar qualquer coisa, analise a estrutura atual do projeto e identifique como estão implementados:
+
+* upload de fotos;
+* modo de foto única;
+* modo de várias fotos;
+* edição/enquadramento;
+* pré-visualização;
+* download;
+* etapas do fluxo;
+* layout responsivo.
+
+Depois faça as alterações abaixo.
+
+━━━━━━━━━━━━━━━━━━━━
+
+1. MANTER O QUE JÁ FUNCIONA
+   ━━━━━━━━━━━━━━━━━━━━
+
+Preserve as funcionalidades existentes, principalmente:
+
+* escolha/upload de foto;
+* foto única;
+* várias fotos;
+* zoom;
+* movimentação da imagem;
+* enquadramento/crop;
+* personalização da lembrança;
+* legenda/texto;
+* pré-visualização;
+* download;
+* formatos que já estejam funcionando.
+
+Não remova funcionalidades para simplificar o projeto.
+
+Se alguma função já estiver funcionando corretamente, não altere sua lógica sem necessidade.
+
+━━━━━━━━━━━━━━━━━━━━
+2. REFAZER A ORGANIZAÇÃO VISUAL DA PRIMEIRA ETAPA
+━━━━━━━━━━━━━━━━━━━━
+
+A tela inicial está visualmente confusa e alguns cartões/opções ficam parecendo pequenos quadrados desconectados.
+
+Quero uma interface mais limpa e profissional.
+
+A primeira etapa deve deixar muito claro:
+
+1. Escolha suas fotos
+2. Escolha o modo de impressão:
+
+   * Uma foto
+   * Várias fotos
+
+As duas opções devem parecer parte do mesmo sistema, com cartões bem alinhados, espaçamento consistente e hierarquia visual clara.
+
+Evitar:
+
+* elementos enormes;
+* quadrados soltos;
+* informações repetidas;
+* excesso de espaço vazio;
+* aparência de protótipo;
+* componentes desalinhados.
+
+Manter a identidade visual já existente do projeto, sem trocar completamente as cores ou criar outro estilo.
+
+━━━━━━━━━━━━━━━━━━━━
+3. CORRIGIR COMPLETAMENTE O MODO "VÁRIAS FOTOS"
+━━━━━━━━━━━━━━━━━━━━
+
+Esta é a mudança mais importante.
+
+Atualmente, quando várias fotos são adicionadas, elas aparecem grandes e espalhadas pela tela, deixando tudo desorganizado.
+
+Isso precisa ser substituído por uma verdadeira área de gerenciamento de fotos.
+
+Criar uma grade compacta de miniaturas.
+
+Exemplo conceitual:
+
+[ Foto 1 ] [ Foto 2 ] [ Foto 3 ]
+[ Foto 4 ] [ Foto 5 ] [ Foto 6 ]
+[ Foto 7 ] [ Foto 8 ] [ Foto 9 ]
+
+Cada foto deve aparecer como uma miniatura organizada.
+
+Cada miniatura deve mostrar claramente:
+
+* número da foto;
+* imagem;
+* indicação de seleção/edição;
+* opção de remover, se essa função já existir ou puder ser adicionada com segurança.
+
+Não mostrar todas as fotos em tamanho grande ao mesmo tempo.
+
+A quantidade de fotos pode crescer e a grade deve continuar organizada.
+
+━━━━━━━━━━━━━━━━━━━━
+4. EDIÇÃO INDIVIDUAL DAS FOTOS
+━━━━━━━━━━━━━━━━━━━━
+
+Quando o usuário clicar em uma miniatura, essa foto passa a ser a foto selecionada para edição.
+
+A área de edição deve trabalhar somente com a foto selecionada.
+
+Deve continuar sendo possível:
+
+* aumentar/diminuir zoom;
+* mover a foto;
+* reposicionar;
+* enquadrar;
+* visualizar o resultado.
+
+IMPORTANTE:
+
+Editar a Foto 3, por exemplo, NÃO pode alterar a Foto 1, Foto 2 ou qualquer outra.
+
+Cada foto precisa guardar seu próprio estado de edição.
+
+Exemplo:
+
+Foto 1 → zoom e posição próprios
+Foto 2 → zoom e posição próprios
+Foto 3 → zoom e posição próprios
+
+Ao clicar novamente na Foto 1, o sistema deve recuperar exatamente o enquadramento que foi salvo anteriormente.
+
+━━━━━━━━━━━━━━━━━━━━
+5. PRÉVIA DO CONJUNTO
+━━━━━━━━━━━━━━━━━━━━
+
+A etapa atualmente chamada de algo como "Sua lembrança" não deve mostrar apenas uma foto enorme por vez.
+
+Quero uma visualização mais útil do conjunto.
+
+Quando houver várias fotos, mostrar uma prévia organizada em miniaturas ou pequenos cards.
+
+Exemplo:
+
+┌────────┐ ┌────────┐ ┌────────┐
+│ Foto 1 │ │ Foto 2 │ │ Foto 3 │
+└────────┘ └────────┘ └────────┘
+
+Isso permite que o usuário veja rapidamente se gostou do conjunto.
+
+A prévia maior pode continuar existindo quando uma foto específica for selecionada, mas não deve dominar a tela inteira.
+
+━━━━━━━━━━━━━━━━━━━━
+6. NUMERAÇÃO DAS FOTOS
+━━━━━━━━━━━━━━━━━━━━
+
+Corrigir a ordem visual das fotos.
+
+A numeração precisa ser consistente:
+
+1 → primeira foto
+2 → segunda foto
+3 → terceira foto
+4 → quarta foto
+
+A ordem deve ser a mesma:
+
+* na grade;
+* na edição;
+* na prévia;
+* no download;
+* no celular.
+
+Não pode acontecer de a foto 1 aparecer em uma posição diferente da foto 1 em outra etapa.
+
+━━━━━━━━━━━━━━━━━━━━
+7. RESPONSIVIDADE — PRINCIPALMENTE CELULAR
+━━━━━━━━━━━━━━━━━━━━
+
+O projeto precisa funcionar corretamente em telas pequenas.
+
+No celular, atualmente os elementos das etapas ficam em posições estranhas e a ordem visual pode parecer invertida.
+
+Corrigir isso.
+
+No celular:
+
+* manter a ordem lógica das etapas;
+* não colocar o passo 2 acima do passo 1;
+* não deixar botões cortados;
+* não criar rolagem horizontal;
+* não deixar fotos gigantes;
+* adaptar a grade de miniaturas para a largura disponível;
+* manter números e controles próximos às fotos;
+* manter botões fáceis de tocar.
+
+A interface deve funcionar naturalmente em:
+
+* celular;
+* tablet;
+* computador.
+
+No celular, a grade pode ter 2 colunas ou quantidade adequada à largura disponível.
+
+No computador, pode usar mais colunas.
+
+Não simplesmente reduzir tudo proporcionalmente: reorganize os componentes de forma responsiva.
+
+━━━━━━━━━━━━━━━━━━━━
+8. ETAPAS DO FLUXO
+━━━━━━━━━━━━━━━━━━━━
+
+Deixar o fluxo visualmente muito claro.
+
+Preferencialmente:
+
+ETAPA 1
+Escolha suas fotos
+
+↓
+
+ETAPA 2
+Edite e organize
+
+↓
+
+ETAPA 3
+Confira sua lembrança
+
+↓
+
+ETAPA 4
+Baixe
+
+Os nomes podem ser adaptados ao design atual, mas a lógica precisa permanecer clara.
+
+No modo de foto única, o fluxo pode ser mais simples.
+
+No modo de várias fotos, deve existir uma área clara para administrar o conjunto.
+
+━━━━━━━━━━━━━━━━━━━━
+9. BOTÃO "ADICIONAR MAIS FOTOS"
+━━━━━━━━━━━━━━━━━━━━
+
+No modo de várias fotos, deve existir uma forma clara de adicionar mais fotos depois que algumas já foram carregadas.
+
+Exemplo:
+
+* Adicionar fotos
+
+Isso deve permitir continuar adicionando fotos sem apagar as anteriores.
+
+Não substituir o conjunto inteiro quando o usuário quiser apenas acrescentar uma nova foto.
+
+━━━━━━━━━━━━━━━━━━━━
+10. REMOVER FOTO INDIVIDUALMENTE
+━━━━━━━━━━━━━━━━━━━━
+
+Se ainda não existir uma função segura para isso, adicionar uma opção simples para remover uma foto individual.
+
+Exemplo:
+
+Foto 3
+[🗑 remover]
+
+Ao remover:
+
+* as outras fotos permanecem;
+* a numeração é reorganizada corretamente;
+* os dados das outras fotos não são perdidos;
+* a prévia é atualizada.
+
+Adicionar confirmação apenas se realmente for necessária. Não criar janelas excessivas.
+
+━━━━━━━━━━━━━━━━━━━━
+11. NÃO DEFORMAR AS FOTOS
+━━━━━━━━━━━━━━━━━━━━
+
+Preservar a regra já definida:
+
+A foto nunca deve ser esticada ou deformada para caber no modelo.
+
+Usar enquadramento/crop adequado.
+
+O usuário deve controlar:
+
+* zoom;
+* posição horizontal;
+* posição vertical.
+
+O resultado final precisa respeitar exatamente o enquadramento mostrado na prévia.
+
+━━━━━━━━━━━━━━━━━━━━
+12. PRÉVIA = RESULTADO FINAL
+━━━━━━━━━━━━━━━━━━━━
+
+Esta regra é MUITO importante.
+
+O que o usuário vê na prévia precisa corresponder ao que será gerado no download.
+
+Não pode acontecer:
+
+"na tela está bonito, mas quando baixa a imagem o enquadramento muda."
+
+O arquivo exportado deve usar exatamente:
+
+* posição;
+* zoom;
+* crop;
+* proporção;
+* texto;
+* layout
+
+que aparecem na prévia.
+
+━━━━━━━━━━━━━━━━━━━━
+13. TEXTOS E PERSONALIZAÇÃO
+━━━━━━━━━━━━━━━━━━━━
+
+Preservar o sistema atual de texto/legenda.
+
+Quando uma foto tiver uma legenda personalizada, essa informação deve ficar vinculada àquela foto.
+
+Exemplo:
+
+Foto 1 → "Nossa família"
+Foto 2 → "Meu amor"
+Foto 3 → "Momentos especiais"
+
+Editar a legenda de uma foto não pode alterar as demais.
+
+Se o projeto já tiver controles de fonte, tamanho ou alinhamento, preservá-los.
+
+Não adicionar dezenas de controles novos agora.
+
+━━━━━━━━━━━━━━━━━━━━
+14. DOWNLOAD
+━━━━━━━━━━━━━━━━━━━━
+
+Preservar o download atual.
+
+Quando houver várias fotos, garantir que cada resultado seja gerado corretamente e na ordem certa.
+
+Se já existir a opção de baixar todas as fotos, preservá-la.
+
+Se for simples e seguro adicionar uma opção de:
+
+"Baixar todas"
+
+pode adicionar.
+
+Mas NÃO implemente agora sistemas complexos de PDF, impressão A4 ou múltiplos layouts se isso exigir alterar profundamente o código existente.
+
+Essas etapas serão feitas posteriormente.
+
+━━━━━━━━━━━━━━━━━━━━
+15. PREPARAR O CÓDIGO PARA A PRÓXIMA FASE
+━━━━━━━━━━━━━━━━━━━━
+
+Não é necessário implementar tudo agora, mas organize o código de maneira que futuramente seja fácil adicionar:
+
+* impressão em folha A4;
+* diferentes quantidades por folha;
+* 4 fotos por folha;
+* 6 fotos por folha;
+* 9 fotos por folha;
+* 12 fotos por folha;
+* medidas reais em centímetros;
+* margens;
+* espaçamento;
+* PDF;
+* impressão;
+* diferentes modelos de Polaroid;
+* download do conjunto.
+
+Não criar essas funções agora se elas não existirem.
+
+Apenas evitar uma estrutura que dificulte essas futuras funcionalidades.
+
+━━━━━━━━━━━━━━━━━━━━
+16. EXPERIÊNCIA VISUAL
+━━━━━━━━━━━━━━━━━━━━
+
+O resultado deve parecer uma ferramenta pronta para uso de uma pequena empresa, e não uma tela de teste.
+
+Prioridades:
+
+1. organização;
+2. clareza;
+3. facilidade de uso;
+4. aparência bonita;
+5. responsividade;
+6. funcionalidade.
+
+Não exagerar em animações.
+
+Não criar elementos decorativos que atrapalhem.
+
+Não aumentar desnecessariamente os componentes.
+
+As fotos devem ser protagonistas.
+
+━━━━━━━━━━━━━━━━━━━━
+17. NÃO QUEBRAR O PROJETO
+━━━━━━━━━━━━━━━━━━━━
+
+Antes de fazer mudanças grandes, identifique quais componentes controlam:
+
+* upload;
+* fotos;
+* edição;
+* prévia;
+* exportação.
+
+Faça alterações de forma incremental.
+
+Depois verifique se:
+
+* uma foto continua funcionando;
+* várias fotos continuam funcionando;
+* zoom continua funcionando;
+* movimentação continua funcionando;
+* legenda continua funcionando;
+* download continua funcionando;
+* a ordem das fotos continua correta.
+
+Não substitua uma implementação funcional simplesmente por uma versão nova sem necessidade.
+
+━━━━━━━━━━━━━━━━━━━━
+18. TESTE FINAL OBRIGATÓRIO
+━━━━━━━━━━━━━━━━━━━━
+
+Antes de finalizar, teste pelo menos estes cenários:
+
+TESTE 1
+Adicionar uma única foto.
+
+TESTE 2
+Adicionar 3 fotos diferentes.
+
+TESTE 3
+Adicionar 6 fotos diferentes.
+
+TESTE 4
+Adicionar várias fotos e editar somente a Foto 2.
+
+Confirmar que as outras não mudaram.
+
+TESTE 5
+Editar Foto 4, sair dela e voltar.
+
+Confirmar que o enquadramento permanece salvo.
+
+TESTE 6
+Remover uma foto do meio da sequência.
+
+Confirmar que a numeração fica correta.
+
+TESTE 7
+Verificar o funcionamento no celular.
+
+TESTE 8
+Baixar o resultado e comparar com a prévia.
+
+━━━━━━━━━━━━━━━━━━━━
+19. MUITO IMPORTANTE SOBRE O ESCOPO
+━━━━━━━━━━━━━━━━━━━━
+
+NÃO tente transformar este projeto inteiro em uma nova aplicação.
+
+Esta tarefa é principalmente uma grande melhoria de UX/UI e organização do fluxo existente.
+
+Prioridade absoluta:
+
+1. corrigir o modo de várias fotos;
+2. criar grade de miniaturas;
+3. permitir edição individual;
+4. corrigir a prévia;
+5. corrigir a ordem no celular;
+6. manter as funções existentes;
+7. garantir que o download corresponda à prévia;
+8. deixar a base preparada para A4/PDF futuramente.
+
+Se houver algum conflito entre uma nova melhoria e uma função existente que já funciona, preserve a função existente e faça a melhoria sem quebrá-la.
+
+Ao terminar, informe resumidamente:
+
+* quais arquivos foram alterados;
+* quais funcionalidades foram corrigidas;
+* quais funcionalidades existentes foram preservadas;
+* se encontrou algum problema que não conseguiu corrigir.
+
+NÃO faça uma nova aplicação.
+NÃO apague o projeto atual.
+NÃO remova funcionalidades existentes.
+NÃO altere a identidade visual inteira.
+NÃO implemente A4/PDF ainda.

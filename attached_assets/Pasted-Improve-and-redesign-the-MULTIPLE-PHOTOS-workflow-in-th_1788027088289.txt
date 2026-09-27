@@ -1,0 +1,63 @@
+Improve and redesign the MULTIPLE PHOTOS workflow in the existing LaVictoria Polaroid app.
+
+IMPORTANT: Do not change or break the existing SINGLE PHOTO workflow. The current single-photo upload, Polaroid formats, manual zoom/framing, optional caption, preview and download must continue working exactly as they do now.
+
+For MULTIPLE PHOTOS:
+
+1. REDESIGN THE VISUAL INTERFACE
+Replace the current large stacked image layout with a compact thumbnail grid.
+When several photos are uploaded, do NOT display each original image at full size one below another.
+Show small, clean thumbnails in a responsive grid or row.
+
+2. PHOTO SELECTION
+Each uploaded photo must be clearly clickable.
+Clicking a thumbnail must select that specific photo for editing.
+Show a clear visual indication of which photo is currently selected.
+
+3. INDIVIDUAL FRAMING
+The selected photo must appear in the Polaroid preview area.
+Allow the user to adjust the selected photo using the existing zoom/framing controls.
+Each photo must keep its own individual framing/crop.
+Changing the framing of Photo 1 must not change Photo 2.
+
+4. BATCH MODES
+Keep the two existing batch options:
+- One Polaroid per photo
+- Repeat one photo
+
+For "One Polaroid per photo", generate one separate Polaroid for every uploaded image.
+
+For "Repeat one photo", allow the user to choose the selected photo and the number of identical Polaroids to generate.
+
+5. BATCH DOWNLOAD
+Add a clear button such as:
+"BAIXAR TODAS AS POLAROIDS"
+
+When selected, generate all resulting Polaroids and download them together, preferably as a ZIP file if multiple separate image files are required.
+
+6. PREVIEW
+The interface should make it obvious which photo is being edited and which Polaroid will be generated.
+Do not require the user to scroll through huge images to reach the preview.
+
+7. MOBILE RESPONSIVENESS
+On mobile, keep the workflow compact and intuitive.
+The order should remain:
+01 — Escolha suas fotos
+→ seleção das fotos
+→ edição/enquadramento
+→ 02 — Suas Polaroids
+→ download.
+
+8. VISUAL DESIGN
+Keep the existing LaVictoria Polaroid visual identity, colors, typography and overall professional aesthetic.
+Do not use generic landscape placeholder icons for the photo-selection cards.
+Make the "Uma foto" and "Várias fotos" choices visually cleaner and more consistent with the rest of the application.
+
+9. DO NOT IMPLEMENT A4 YET.
+A4 printing, number of Polaroids per sheet and PDF export will be developed in a later step.
+
+After making these changes, test both workflows:
+A) one photo
+B) multiple photos
+
+Make sure the existing single-photo functionality remains intact.

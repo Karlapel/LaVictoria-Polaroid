@@ -1,0 +1,1 @@
+- [Multi-photo export](multi-photo-export.md) — keep each photo’s framing and caption independent; export separate PNGs until a later print-sheet phase.
