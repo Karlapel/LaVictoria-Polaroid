@@ -1387,15 +1387,9 @@
     gap: 54px;
   }
   .control-column {
-    order: 2;
+    order: 1;
   }
   .preview-column {
-    order: 1;
-  }
-  .is-multiple-mode .control-column {
-    order: 1;
-  }
-  .is-multiple-mode .preview-column {
     order: 2;
   }
   .polaroid-stage {

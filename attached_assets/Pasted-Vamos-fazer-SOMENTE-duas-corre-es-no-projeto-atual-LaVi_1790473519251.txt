@@ -1,0 +1,110 @@
+Vamos fazer SOMENTE duas correções no projeto atual **LaVictoria Polaroid**.
+
+IMPORTANTE:
+
+* NÃO recrie o projeto.
+* NÃO altere o design que acabou de ser implementado.
+* NÃO mexa na lógica de upload, edição, zoom, legendas, formatos, repetição de fotos ou conjunto de fotos.
+* NÃO implemente A4, PDF ou novas funcionalidades agora.
+* Preserve tudo que já está funcionando.
+* Faça apenas as duas correções abaixo.
+
+━━━━━━━━━━━━━━━━━━━━
+
+1. CORRIGIR A ORDEM NO CELULAR
+   ━━━━━━━━━━━━━━━━━━━━
+
+No computador a organização está boa, mas no celular os blocos das etapas ainda aparecem visualmente fora de ordem.
+
+A ordem precisa ser SEMPRE:
+
+1. Escolha suas fotos
+2. Edite/organize suas fotos
+3. Confira seu conjunto / Prévia
+
+No celular, tablet e computador essa ordem deve permanecer a mesma.
+
+Não permitir que o CSS/Grid/Flex altere a ordem dos blocos dependendo da largura da tela.
+
+No celular deve aparecer verticalmente:
+
+ETAPA 1
+↓
+ETAPA 2
+↓
+ETAPA 3
+
+Verifique especialmente regras como:
+
+* order;
+* grid-area;
+* flex-direction;
+* CSS grid;
+* media queries;
+* posicionamento responsivo.
+
+Corrija somente o necessário.
+
+━━━━━━━━━━━━━━━━━━━━
+2. CORRIGIR A FUNÇÃO "PRÉVIA"
+━━━━━━━━━━━━━━━━━━━━
+
+Existe uma função/botão de "Prévia" que funciona no computador/notebook, mas no tablet a prévia não abre corretamente.
+
+IMPORTANTE: não criar uma prévia diferente e não substituir a implementação existente sem antes investigar.
+
+Primeiro analise o código atual e descubra:
+
+* qual função é chamada pelo botão Prévia;
+* qual rota/página/componente deveria abrir;
+* se existe uma rota específica para a prévia;
+* se existe erro de JavaScript;
+* se a abertura depende de nova aba/janela;
+* se existe uso de window.open;
+* se existe algum bloqueio de popup;
+* se existe alguma diferença de comportamento entre desktop, tablet e celular.
+
+A prévia deve continuar funcionando como já funciona no computador, mas também precisa funcionar corretamente no tablet e no celular.
+
+Se atualmente a intenção é abrir uma página/rota separada de prévia, preserve esse comportamento.
+
+Não transformar a prévia em apenas uma seção da mesma tela se isso alterar o funcionamento atual.
+
+Depois da correção, verificar:
+
+COMPUTADOR:
+Prévia → abre normalmente.
+
+TABLET:
+Prévia → abre normalmente.
+
+CELULAR:
+Prévia → abre normalmente.
+
+Se a abertura em nova aba/janela for bloqueada pelo navegador, implemente uma alternativa compatível, como navegação para a rota de prévia na mesma aba, mas somente se necessário.
+
+O objetivo é que o usuário consiga acessar a prévia de forma confiável em qualquer dispositivo.
+
+━━━━━━━━━━━━━━━━━━━━
+3. TESTE ANTES DE FINALIZAR
+━━━━━━━━━━━━━━━━━━━━
+
+Teste:
+
+* fluxo completo no computador;
+* fluxo completo no celular;
+* fluxo completo no tablet;
+* ordem 1 → 2 → 3;
+* botão Prévia no computador;
+* botão Prévia no tablet;
+* botão Prévia no celular.
+
+Não altere nenhuma outra parte do projeto.
+
+Ao finalizar, informe exatamente:
+
+1. qual arquivo/componente controla a ordem responsiva;
+2. qual era o problema que estava fazendo a ordem ficar errada no celular;
+3. qual arquivo/componente controla a Prévia;
+4. qual era o problema que impedia a Prévia de abrir no tablet;
+5. quais arquivos foram alterados.
