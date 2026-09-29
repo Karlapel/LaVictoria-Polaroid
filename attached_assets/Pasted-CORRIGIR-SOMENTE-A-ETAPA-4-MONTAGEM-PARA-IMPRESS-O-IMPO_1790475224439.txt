@@ -1,0 +1,173 @@
+CORRIGIR SOMENTE A ETAPA 4 — MONTAGEM PARA IMPRESSÃO.
+
+IMPORTANTE: as etapas 1, 2 e 3 estão funcionando e NÃO devem ser recriadas, simplificadas ou alteradas. Preserve upload, foto única, múltiplas fotos, seleção da moldura, edição individual, zoom, posicionamento, corte, legendas, ordem das fotos, repetição de fotos e a prévia existente.
+
+O problema atual está especificamente na montagem A4.
+
+### PROBLEMA ATUAL
+
+Na etapa 4, ao escolher 4, 6, 9 ou 12 Polaroids por folha, o sistema NÃO está montando várias Polaroids dentro de uma única folha A4.
+
+Atualmente ele parece:
+
+* criar/redimensionar uma área branca;
+* colocar a foto muito pequena no centro;
+* retirar visualmente a moldura/estrutura da Polaroid;
+* mudar apenas o tamanho/orientação dessa área quando seleciono 4, 6, 9 ou 12;
+* mostrar “Página 1 de 1”, mas sem realmente montar a grade de Polaroids.
+
+Isso precisa ser corrigido.
+
+### COMPORTAMENTO CORRETO
+
+A etapa 4 deve representar UMA FOLHA A4 REAL, na proporção correta de A4 (210 × 297 mm).
+
+Dentro dessa folha devem existir várias Polaroids completas.
+
+Exemplos:
+
+4 por folha:
+
+* 1 folha A4
+* 4 Polaroids dentro dela
+
+6 por folha:
+
+* 1 folha A4
+* 6 Polaroids dentro dela
+
+9 por folha:
+
+* 1 folha A4
+* 9 Polaroids dentro dela
+
+12 por folha:
+
+* 1 folha A4
+* 12 Polaroids dentro dela
+
+O número selecionado significa QUANTAS POLAROIDS CABEM NA FOLHA, e NÃO deve simplesmente redimensionar uma única Polaroid.
+
+### MUITO IMPORTANTE: PRESERVAR A POLAROID
+
+Cada item dentro da folha A4 precisa continuar sendo uma Polaroid completa.
+
+Deve preservar:
+
+* modelo de moldura escolhido pelo usuário;
+* formato da Polaroid;
+* foto;
+* crop/corte;
+* zoom;
+* posicionamento;
+* legenda/nome;
+* ordem das fotos.
+
+NÃO transformar a Polaroid em um quadrado branco simples.
+
+Se o usuário escolheu uma moldura retangular, por exemplo, cada uma das 12 unidades deve continuar sendo aquela mesma Polaroid retangular, apenas reduzida proporcionalmente para caber na folha.
+
+### FOLHA A4 NA INTERFACE
+
+Visualmente, diferencie a folha A4 do fundo da interface.
+
+Sugestão:
+
+* fundo externo da área de montagem: bege/cinza bem claro;
+* folha A4: branca;
+* sombra discreta ao redor da folha.
+
+A cor da folha na tela é apenas para visualização. A futura impressão/PDF deve continuar sendo uma folha A4 branca.
+
+O objetivo é ficar visualmente claro que existe:
+
+FUNDO DA INTERFACE → FOLHA A4 → POLAROIDS
+
+Não usar um grande quadrado branco indistinguível do fundo.
+
+### DISTRIBUIÇÃO
+
+Criar automaticamente uma grade equilibrada para cada quantidade:
+
+4 → grade adequada para 4 Polaroids
+6 → grade adequada para 6
+9 → grade 3 × 3
+12 → grade 3 × 4 ou outra distribuição equilibrada que respeite a proporção A4 e a orientação da Polaroid.
+
+Manter margens e espaçamentos equilibrados para permitir corte.
+
+Não adicionar controles complexos de margem agora.
+
+### MÚLTIPLAS FOTOS
+
+A montagem deve usar as Polaroids existentes, na ordem atual.
+
+Exemplo:
+5 fotos + 12 por folha:
+
+* página 1 deve conter as 5 Polaroids;
+* não criar 5 folhas A4;
+* não colocar cada foto dentro de uma mini folha;
+* as 5 Polaroids devem aparecer juntas dentro de UMA folha A4.
+
+Se houver mais Polaroids do que cabem na folha:
+
+* criar automaticamente páginas adicionais;
+* exemplo: 13 Polaroids + 12 por folha = 2 páginas;
+* página 1 = 12;
+* página 2 = 1.
+
+Mostrar corretamente “Folha 1 de 2”, “Folha 2 de 2” etc.
+
+Se houver somente 5 Polaroids e a opção for 12 por folha, deve continuar sendo UMA folha A4 com as 5 Polaroids distribuídas nela.
+
+### REPETIÇÃO
+
+Respeitar a opção existente de “repetir foto”.
+
+Se uma foto foi repetida, cada repetição deve ser uma Polaroid independente dentro da montagem A4.
+
+### DOWNLOAD
+
+ATENÇÃO: atualmente o botão de salvar/download está salvando somente uma Polaroid individual da etapa anterior.
+
+Não remover o download existente.
+
+A etapa 4 deve ficar preparada para que o download futuro utilize a montagem A4 completa.
+
+Se a implementação atual já permitir corrigir o download sem risco, faça com que o download da etapa 4 represente a montagem A4. Caso isso exija criar o PDF definitivo, NÃO crie PDF agora. O PDF será uma próxima etapa.
+
+### NÃO FAZER AGORA
+
+Não criar PDF definitivo.
+Não recriar o projeto.
+Não alterar a identidade visual.
+Não alterar as etapas 1, 2 e 3.
+Não criar novos modelos de Polaroid.
+Não criar seleção de moldura individual por foto.
+Não adicionar dezenas de controles.
+Não mexer no comportamento que já está funcionando.
+
+### TESTE OBRIGATÓRIO
+
+Depois da correção, teste:
+
+1. 1 foto + 4 por folha → 1 A4 contendo 1 Polaroid.
+2. 5 fotos + 12 por folha → 1 A4 contendo 5 Polaroids.
+3. 5 fotos + 4 por folha → 2 páginas: 4 + 1.
+4. 9 fotos + 9 por folha → 1 A4 contendo 9 Polaroids.
+5. 12 fotos + 12 por folha → 1 A4 contendo 12 Polaroids.
+6. 13 fotos + 12 por folha → 2 páginas: 12 + 1.
+7. Verificar que legendas, crop, zoom e modelo da moldura continuam preservados.
+8. Verificar que alterar uma foto na etapa anterior atualiza a montagem A4.
+9. Verificar desktop e mobile.
+
+Antes de finalizar, informe:
+
+* quais arquivos foram alterados;
+* como a grade A4 foi implementada;
+* como as páginas múltiplas são calculadas;
+* quais testes foram realizados;
+* qualquer limitação que ainda exista.
+
+Prioridade máxima: CORRIGIR A LÓGICA DA MONTAGEM A4 SEM QUEBRAR O EDITOR QUE JÁ ESTÁ FUNCIONANDO.

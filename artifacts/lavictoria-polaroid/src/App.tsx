@@ -200,8 +200,23 @@ function drawPolaroidCanvas(
 
 const A4_WIDTH_MM = 210;
 const A4_HEIGHT_MM = 297;
-const A4_QUANTITIES = [4, 6, 9, 12] as const;
-type A4Quantity = (typeof A4_QUANTITIES)[number];
+const A4_MARGIN_MM = 12;
+const A4_GAP_MM = 5;
+const A4_RENDER_WIDTH_PX = 2480;
+const A4_RENDER_HEIGHT_PX = 3508;
+const A4_SIZE_LIMITS = { min: 3, maxWidth: 18.6, maxHeight: 27.3 } as const;
+
+type A4SizePreset = 'small' | 'standard' | 'large' | 'custom';
+type A4Size = {
+  widthCm: number;
+  heightCm: number;
+};
+
+const A4_SIZE_PRESETS: Array<{ id: Exclude<A4SizePreset, 'custom'>; label: string; size: A4Size }> = [
+  { id: 'small', label: 'Small', size: { widthCm: 6, heightCm: 7.5 } },
+  { id: 'standard', label: 'Standard', size: { widthCm: 8.5, heightCm: 10.5 } },
+  { id: 'large', label: 'Large', size: { widthCm: 10, heightCm: 12.5 } },
+];
 
 type MountPhoto = {
   id: string;
@@ -223,84 +238,201 @@ type A4Placement = {
 type A4Layout = {
   columns: number;
   rows: number;
-  margin: number;
-  gap: number;
+  capacity: number;
+  cardWidth: number;
+  cardHeight: number;
+  rotated: boolean;
   placements: A4Placement[];
 };
 
-function getA4Layout(quantity: A4Quantity, formatConfig: FormatConfig): A4Layout {
-  const candidates: Record<A4Quantity, Array<[number, number]>> = {
-    4: [[2, 2], [1, 4], [4, 1]],
-    6: [[2, 3], [3, 2], [1, 6], [6, 1]],
-    9: [[3, 3]],
-    12: [[3, 4], [4, 3], [2, 6], [6, 2]],
-  };
-  const margin = quantity === 4 ? 16 : quantity === 6 ? 13 : quantity === 9 ? 10 : 8;
-  const gap = quantity === 4 ? 8 : quantity === 6 ? 6 : quantity === 9 ? 5 : 4;
-  const frameRatio = FRAME_WIDTH / (formatConfig.topInset + formatConfig.photoHeight + formatConfig.captionHeight);
-
-  const bestGrid = candidates[quantity].reduce((best, [columns, rows]) => {
-    const cellWidth = (A4_WIDTH_MM - margin * 2 - gap * (columns - 1)) / columns;
-    const cellHeight = (A4_HEIGHT_MM - margin * 2 - gap * (rows - 1)) / rows;
-    const cardWidth = Math.min(cellWidth, cellHeight * frameRatio);
-    const score = cardWidth * (cardWidth / frameRatio);
-    return score > best.score ? { columns, rows, score } : best;
-  }, { columns: candidates[quantity][0][0], rows: candidates[quantity][0][1], score: -1 });
-
-  const { columns, rows } = bestGrid;
-  const innerWidth = A4_WIDTH_MM - margin * 2;
-  const innerHeight = A4_HEIGHT_MM - margin * 2;
-  const cellWidth = (innerWidth - gap * (columns - 1)) / columns;
-  const cellHeight = (innerHeight - gap * (rows - 1)) / rows;
-  const cardWidth = Math.min(cellWidth, cellHeight * frameRatio);
-  const cardHeight = cardWidth / frameRatio;
-  const placements = Array.from({ length: quantity }, (_, index) => {
-    const column = index % columns;
-    const row = Math.floor(index / columns);
-    return {
-      left: margin + column * (cellWidth + gap) + (cellWidth - cardWidth) / 2,
-      top: margin + row * (cellHeight + gap) + (cellHeight - cardHeight) / 2,
-      width: cardWidth,
-      height: cardHeight,
-    };
+function getA4Layout(size: A4Size, itemCount: number): A4Layout {
+  const availableWidth = A4_WIDTH_MM - A4_MARGIN_MM * 2;
+  const availableHeight = A4_HEIGHT_MM - A4_MARGIN_MM * 2;
+  const candidates = [false, true].map((rotated) => {
+    const cardWidth = (rotated ? size.heightCm : size.widthCm) * 10;
+    const cardHeight = (rotated ? size.widthCm : size.heightCm) * 10;
+    const columns = cardWidth <= availableWidth
+      ? Math.floor((availableWidth + A4_GAP_MM) / (cardWidth + A4_GAP_MM))
+      : 0;
+    const rows = cardHeight <= availableHeight
+      ? Math.floor((availableHeight + A4_GAP_MM) / (cardHeight + A4_GAP_MM))
+      : 0;
+    const capacity = columns * rows;
+    const usedWidth = columns * cardWidth + (columns - 1) * A4_GAP_MM;
+    const usedHeight = rows * cardHeight + (rows - 1) * A4_GAP_MM;
+    const startLeft = (A4_WIDTH_MM - usedWidth) / 2;
+    const startTop = (A4_HEIGHT_MM - usedHeight) / 2;
+    const placements = Array.from({ length: Math.min(itemCount, capacity) }, (_, index) => {
+      const column = index % columns;
+      const row = Math.floor(index / columns);
+      return {
+        left: startLeft + column * (cardWidth + A4_GAP_MM),
+        top: startTop + row * (cardHeight + A4_GAP_MM),
+        width: cardWidth,
+        height: cardHeight,
+      };
+    });
+    return { columns, rows, capacity, cardWidth, cardHeight, rotated, placements };
   });
 
-  return { columns, rows, margin, gap, placements };
+  return candidates.reduce((best, candidate) => (
+    candidate.capacity > best.capacity
+      ? candidate
+      : best
+  ));
+}
+
+function parseDecimalInput(value: string) {
+  const normalized = value.trim().replace(',', '.');
+  if (!/^\d+(?:\.\d+)?$/.test(normalized)) return null;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function validateA4Size(widthInput: string, heightInput: string): string {
+  const width = parseDecimalInput(widthInput);
+  const height = parseDecimalInput(heightInput);
+  if (width === null || height === null) return 'Use números válidos, como 8,5 ou 10.';
+  if (width < A4_SIZE_LIMITS.min || height < A4_SIZE_LIMITS.min) {
+    return `Use medidas de pelo menos ${A4_SIZE_LIMITS.min} cm.`;
+  }
+  if (width > A4_SIZE_LIMITS.maxWidth || height > A4_SIZE_LIMITS.maxHeight) {
+    return `Use até ${A4_SIZE_LIMITS.maxWidth} cm de largura e ${A4_SIZE_LIMITS.maxHeight} cm de altura.`;
+  }
+  return '';
+}
+
+function drawMountedPolaroidCanvas(
+  canvas: HTMLCanvasElement,
+  sourceImage: HTMLImageElement | null,
+  formatConfig: FormatConfig,
+  framing: FramingState,
+  caption: string,
+  widthMm: number,
+  heightMm: number,
+  rotated = false,
+) {
+  if (rotated) {
+    const unrotatedCanvas = document.createElement('canvas');
+    drawMountedPolaroidCanvas(
+      unrotatedCanvas,
+      sourceImage,
+      formatConfig,
+      framing,
+      caption,
+      heightMm,
+      widthMm,
+    );
+    canvas.width = Math.max(1, Math.round(widthMm * (A4_RENDER_WIDTH_PX / A4_WIDTH_MM)));
+    canvas.height = Math.max(1, Math.round(heightMm * (A4_RENDER_WIDTH_PX / A4_WIDTH_MM)));
+    const rotatedContext = canvas.getContext('2d');
+    if (!rotatedContext) throw new Error('Canvas is unavailable');
+    rotatedContext.save();
+    rotatedContext.translate(canvas.width / 2, canvas.height / 2);
+    rotatedContext.rotate(Math.PI / 2);
+    rotatedContext.drawImage(
+      unrotatedCanvas,
+      -unrotatedCanvas.width / 2,
+      -unrotatedCanvas.height / 2,
+    );
+    rotatedContext.restore();
+    return;
+  }
+
+  const outputWidth = Math.max(1, Math.round(widthMm * (A4_RENDER_WIDTH_PX / A4_WIDTH_MM)));
+  const outputHeight = Math.max(1, Math.round(heightMm * (A4_RENDER_WIDTH_PX / A4_WIDTH_MM)));
+  canvas.width = outputWidth;
+  canvas.height = outputHeight;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Canvas is unavailable');
+
+  context.fillStyle = '#f8f5ed';
+  context.fillRect(0, 0, outputWidth, outputHeight);
+
+  const polaroidCanvas = document.createElement('canvas');
+  drawPolaroidCanvas(polaroidCanvas, sourceImage, formatConfig, framing, caption);
+  const scale = Math.min(outputWidth / polaroidCanvas.width, outputHeight / polaroidCanvas.height);
+  const drawnWidth = polaroidCanvas.width * scale;
+  const drawnHeight = polaroidCanvas.height * scale;
+  context.drawImage(
+    polaroidCanvas,
+    (outputWidth - drawnWidth) / 2,
+    (outputHeight - drawnHeight) / 2,
+    drawnWidth,
+    drawnHeight,
+  );
+}
+
+function drawA4SheetCanvas(
+  canvas: HTMLCanvasElement,
+  items: MountPhoto[],
+  layout: A4Layout,
+  formatConfig: FormatConfig,
+) {
+  canvas.width = A4_RENDER_WIDTH_PX;
+  canvas.height = A4_RENDER_HEIGHT_PX;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Canvas is unavailable');
+  context.fillStyle = '#fff';
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  layout.placements.slice(0, items.length).forEach((placement, index) => {
+    const itemCanvas = document.createElement('canvas');
+    const item = items[index];
+    drawMountedPolaroidCanvas(
+      itemCanvas,
+      item.sourceImage,
+      formatConfig,
+      item,
+      item.caption.trim(),
+      placement.width,
+      placement.height,
+      layout.rotated,
+    );
+    context.drawImage(
+      itemCanvas,
+      (placement.left / A4_WIDTH_MM) * canvas.width,
+      (placement.top / A4_HEIGHT_MM) * canvas.height,
+      (placement.width / A4_WIDTH_MM) * canvas.width,
+      (placement.height / A4_HEIGHT_MM) * canvas.height,
+    );
+  });
 }
 
 function A4PolaroidCanvas({
   photo,
   formatConfig,
+  widthMm,
+  heightMm,
+  rotated,
 }: {
   photo: MountPhoto;
   formatConfig: FormatConfig;
+  widthMm: number;
+  heightMm: number;
+  rotated: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    canvas.width = formatConfig.photoWidth;
-    canvas.height = formatConfig.photoHeight;
-    const context = canvas.getContext('2d');
-    if (!context) return;
-    context.fillStyle = '#d8c7ae';
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    if (photo.sourceImage) {
-      drawPhotoCrop(
-        context,
-        photo.sourceImage,
-        formatConfig,
-        photo.zoom,
-        photo.panX,
-        photo.panY,
-      );
-    }
-  }, [formatConfig, photo.caption, photo.panX, photo.panY, photo.sourceImage, photo.zoom]);
+    drawMountedPolaroidCanvas(
+      canvas,
+      photo.sourceImage,
+      formatConfig,
+      photo,
+      photo.caption.trim(),
+      widthMm,
+      heightMm,
+      rotated,
+    );
+  }, [formatConfig, heightMm, photo.caption, photo.panX, photo.panY, photo.sourceImage, photo.zoom, rotated, widthMm]);
 
   return (
     <canvas
       ref={canvasRef}
+      className="a4-polaroid-canvas"
       role="img"
       aria-label={`A4 preview of ${photo.fileName}`}
     />
@@ -311,23 +443,16 @@ function A4PagePreview({
   items,
   pageNumber,
   totalPages,
-  quantity,
+  size,
   formatConfig,
 }: {
   items: MountPhoto[];
   pageNumber: number;
   totalPages: number;
-  quantity: A4Quantity;
+  size: A4Size;
   formatConfig: FormatConfig;
 }) {
-  const layout = getA4Layout(quantity, formatConfig);
-  const frameStyle = {
-    '--a4-frame-side': `${(formatConfig.sideInset / FRAME_WIDTH) * 100}%`,
-    '--a4-frame-top': `${(formatConfig.topInset / FRAME_WIDTH) * 100}%`,
-    '--a4-photo-ratio': `${formatConfig.photoWidth} / ${formatConfig.photoHeight}`,
-    '--a4-caption-ratio': `${formatConfig.photoWidth} / ${formatConfig.captionHeight}`,
-    '--a4-frame-ratio': `${FRAME_WIDTH} / ${formatConfig.topInset + formatConfig.photoHeight + formatConfig.captionHeight}`,
-  } as CSSProperties;
+  const layout = getA4Layout(size, items.length);
 
   return (
     <article className="a4-page-card" data-testid={`a4-page-preview-${pageNumber}`}>
@@ -339,17 +464,19 @@ function A4PagePreview({
               className="a4-polaroid"
               key={`${photo.id}-${pageNumber}-${index}`}
               style={{
-                ...frameStyle,
                 left: `${(placement.left / A4_WIDTH_MM) * 100}%`,
                 top: `${(placement.top / A4_HEIGHT_MM) * 100}%`,
                 width: `${(placement.width / A4_WIDTH_MM) * 100}%`,
                 height: `${(placement.height / A4_HEIGHT_MM) * 100}%`,
               }}
             >
-              <div className="a4-polaroid-photo">
-                <A4PolaroidCanvas photo={photo} formatConfig={formatConfig} />
-              </div>
-              <div className="a4-polaroid-caption">{photo.caption.trim()}</div>
+              <A4PolaroidCanvas
+                photo={photo}
+                formatConfig={formatConfig}
+                widthMm={placement.width}
+                heightMm={placement.height}
+                rotated={layout.rotated}
+              />
             </div>
           );
         })}
@@ -369,11 +496,50 @@ function A4MountingStage({
   items: MountPhoto[];
   formatConfig: FormatConfig;
 }) {
-  const [quantity, setQuantity] = useState<A4Quantity>(6);
-  const pageCount = Math.max(1, Math.ceil(items.length / quantity));
+  const [sizePreset, setSizePreset] = useState<A4SizePreset>('standard');
+  const standardSize = A4_SIZE_PRESETS.find((preset) => preset.id === 'standard')!.size;
+  const [customWidth, setCustomWidth] = useState(String(standardSize.widthCm));
+  const [customHeight, setCustomHeight] = useState(String(standardSize.heightCm));
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloaded, setDownloaded] = useState(false);
+  const customSizeError = validateA4Size(customWidth, customHeight);
+  const selectedPreset = A4_SIZE_PRESETS.find((preset) => preset.id === sizePreset);
+  const size = sizePreset === 'custom'
+    ? {
+      widthCm: parseDecimalInput(customWidth) ?? standardSize.widthCm,
+      heightCm: parseDecimalInput(customHeight) ?? standardSize.heightCm,
+    }
+    : selectedPreset?.size ?? standardSize;
+  const layout = getA4Layout(size, items.length);
+  const pageCount = Math.max(1, Math.ceil(items.length / layout.capacity));
   const pages = Array.from({ length: pageCount }, (_, pageIndex) => (
-    items.slice(pageIndex * quantity, (pageIndex + 1) * quantity)
+    items.slice(pageIndex * layout.capacity, (pageIndex + 1) * layout.capacity)
   ));
+  const canDownload = items.length > 0
+    && items.every((item) => item.sourceImage)
+    && !(sizePreset === 'custom' && customSizeError);
+
+  const downloadA4 = async () => {
+    if (!canDownload || isDownloading) return;
+    setIsDownloading(true);
+    setDownloaded(false);
+
+    try {
+      for (const [index, pageItems] of pages.entries()) {
+        const canvas = document.createElement('canvas');
+        drawA4SheetCanvas(canvas, pageItems, getA4Layout(size, pageItems.length), formatConfig);
+        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+        if (!blob) throw new Error('Could not make the A4 sheet');
+        const suffix = pages.length > 1 ? `-sheet-${index + 1}-of-${pages.length}` : '';
+        triggerBlobDownload(blob, `lavictoria-a4${suffix}.png`);
+        await new Promise((resolve) => window.setTimeout(resolve, 90));
+      }
+      setDownloaded(true);
+      window.setTimeout(() => setDownloaded(false), 3000);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <section className="a4-mounting-stage" aria-labelledby="a4-mounting-heading" data-testid="a4-mounting-stage">
@@ -382,7 +548,7 @@ function A4MountingStage({
           <p className="eyebrow a4-eyebrow">04 / Print mounting</p>
           <h2 id="a4-mounting-heading">Set the keepsakes on A4.</h2>
           <p className="a4-mounting-copy">
-            A true A4 sheet, balanced for trimming. Your current framing, captions, and photo order are carried through automatically.
+            A true A4 sheet with fixed physical Polaroid sizes. Your current framing, captions, and photo order are carried through automatically.
           </p>
         </div>
         <div className="a4-page-count" data-testid="text-a4-page-count">
@@ -391,38 +557,106 @@ function A4MountingStage({
         </div>
       </div>
 
-      <div className="a4-quantity-field">
-        <span className="format-label">Polaroids per sheet</span>
-        <div className="a4-quantity-options" role="radiogroup" aria-label="Polaroids per A4 sheet">
-          {A4_QUANTITIES.map((option) => (
+      <div className="a4-size-field">
+        <div className="a4-size-field-header">
+          <span className="format-label">Polaroid size</span>
+          <span className="format-hint">total size, including the frame</span>
+        </div>
+        <div className="a4-size-options" role="radiogroup" aria-label="Polaroid size">
+          {A4_SIZE_PRESETS.map((option) => (
             <button
-              className={`a4-quantity-option${quantity === option ? ' is-selected' : ''}`}
+              className={`a4-size-option${sizePreset === option.id ? ' is-selected' : ''}`}
               type="button"
               role="radio"
-              aria-checked={quantity === option}
-              onClick={() => setQuantity(option)}
-              data-testid={`button-a4-quantity-${option}`}
-              key={option}
+              aria-checked={sizePreset === option.id}
+              onClick={() => setSizePreset(option.id)}
+              data-testid={`button-a4-size-${option.id}`}
+              key={option.id}
             >
-              <strong>{option}</strong>
-              <small>per sheet</small>
+              <strong>{option.label}</strong>
+              <small>{option.size.widthCm} × {option.size.heightCm} cm</small>
             </button>
           ))}
+          <button
+            className={`a4-size-option${sizePreset === 'custom' ? ' is-selected' : ''}`}
+            type="button"
+            role="radio"
+            aria-checked={sizePreset === 'custom'}
+            onClick={() => setSizePreset('custom')}
+            data-testid="button-a4-size-custom"
+          >
+            <strong>Custom</strong>
+            <small>your dimensions</small>
+          </button>
+        </div>
+        {sizePreset === 'custom' && (
+          <div className="a4-custom-size">
+            <label>
+              <span>Width</span>
+              <div className="a4-size-input-wrap">
+                <input
+                  value={customWidth}
+                  inputMode="decimal"
+                  onChange={(event) => setCustomWidth(event.target.value)}
+                  aria-label="Custom Polaroid width in centimeters"
+                  data-testid="input-a4-custom-width"
+                />
+                <small>cm</small>
+              </div>
+            </label>
+            <label>
+              <span>Height</span>
+              <div className="a4-size-input-wrap">
+                <input
+                  value={customHeight}
+                  inputMode="decimal"
+                  onChange={(event) => setCustomHeight(event.target.value)}
+                  aria-label="Custom Polaroid height in centimeters"
+                  data-testid="input-a4-custom-height"
+                />
+                <small>cm</small>
+              </div>
+            </label>
+          </div>
+        )}
+        {sizePreset === 'custom' && customSizeError && (
+          <p className="a4-size-error" role="alert" data-testid="status-a4-size-error">{customSizeError}</p>
+        )}
+        <div className="a4-size-summary">
+          <span>{size.widthCm} × {size.heightCm} cm each</span>
+          <strong>{layout.capacity} Polaroid{layout.capacity === 1 ? '' : 's'} per sheet</strong>
         </div>
       </div>
 
       <div className="a4-page-gallery">
         {pages.map((pageItems, pageIndex) => (
           <A4PagePreview
-            key={`a4-page-${pageIndex + 1}-${quantity}`}
+            key={`a4-page-${pageIndex + 1}-${size.widthCm}-${size.heightCm}`}
             items={pageItems}
             pageNumber={pageIndex + 1}
             totalPages={pageCount}
-            quantity={quantity}
+            size={size}
             formatConfig={formatConfig}
           />
         ))}
       </div>
+      <button
+        className={`a4-download-button${downloaded ? ' is-done' : ''}`}
+        type="button"
+        disabled={!canDownload || isDownloading}
+        onClick={downloadA4}
+        data-testid="button-download-a4"
+      >
+        {downloaded ? <Check size={17} /> : <Download size={17} />}
+        {downloaded
+          ? 'A4 sheets saved'
+          : isDownloading
+            ? 'Preparing A4 sheets…'
+            : `Download ${pageCount} A4 sheet${pageCount === 1 ? '' : 's'}`}
+      </button>
+      <p className="a4-download-hint">
+        Each PNG is a complete 210 × 297 mm composition with margins, spacing, photos, frames, and captions.
+      </p>
     </section>
   );
 }

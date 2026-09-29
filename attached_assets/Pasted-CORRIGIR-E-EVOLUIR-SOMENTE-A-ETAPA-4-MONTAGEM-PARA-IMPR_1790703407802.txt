@@ -1,0 +1,337 @@
+CORRIGIR E EVOLUIR SOMENTE A ETAPA 4 — MONTAGEM PARA IMPRESSÃO.
+
+IMPORTANTE: as etapas 1, 2 e 3 estão funcionando e NÃO devem ser recriadas, simplificadas ou alteradas.
+
+Preservar integralmente:
+
+- upload de foto única;
+- upload de várias fotos;
+- seleção do modelo de Polaroid;
+- edição individual;
+- zoom;
+- posicionamento;
+- crop/corte;
+- legendas individuais;
+- ordem das fotos;
+- repetição de fotos;
+- prévia existente;
+- comportamento responsivo;
+- identidade visual atual.
+
+A etapa 4 já foi criada e atualmente consegue visualizar as fotos dentro de uma folha A4. NÃO destruir essa implementação. Vamos corrigir a lógica para que ela funcione como uma ferramenta real de impressão.
+
+1. REMOVER A LÓGICA DE 4 / 6 / 9 / 12 COMO TAMANHO
+
+Atualmente existem opções:
+
+- 4 por folha
+- 6 por folha
+- 9 por folha
+- 12 por folha
+
+Essas opções estão fazendo o tamanho da Polaroid mudar conforme a quantidade escolhida.
+
+Isso NÃO deve mais acontecer.
+
+O número de Polaroids na folha deve ser consequência do tamanho físico escolhido, e não o contrário.
+
+A Polaroid precisa ter um tamanho físico fixo em centímetros.
+
+Exemplo conceitual:
+
+Se a Polaroid tiver determinado tamanho:
+→ o sistema calcula quantas cabem em uma folha A4.
+
+Se o usuário escolher um tamanho maior:
+→ cabem menos Polaroids.
+
+Se escolher um tamanho menor:
+→ cabem mais Polaroids.
+
+O tamanho da Polaroid NÃO pode mudar apenas porque existem mais ou menos fotos.
+
+2. CRIAR CONFIGURAÇÃO DE TAMANHO
+
+Na etapa 4, criar uma seção clara:
+
+Tamanho da Polaroid
+
+Oferecer alguns tamanhos predefinidos, mas também uma opção:
+
+Personalizado
+
+com:
+
+- Largura: ___ cm
+- Altura: ___ cm
+
+Aceitar valores decimais, por exemplo:
+5
+5,5
+7
+8,5
+10
+
+Converter corretamente vírgula/ponto decimal.
+
+Validar valores inválidos, zero, negativos ou exageradamente grandes.
+
+O tamanho informado deve representar a DIMENSÃO TOTAL DA POLAROID, incluindo a moldura, e não apenas a área da fotografia.
+
+3. TAMANHO PADRÃO
+
+Manter um tamanho padrão/predefinido para facilitar o uso, mas estruturar o sistema para que esse tamanho possa ser alterado futuramente.
+
+Não inventar vários tamanhos desnecessários.
+
+Se o tamanho padrão atual ainda não estiver definido tecnicamente, manter uma configuração centralizada fácil de alterar posteriormente.
+
+4. CÁLCULO AUTOMÁTICO DA FOLHA A4
+
+A folha deve continuar sendo A4 real:
+
+210 mm × 297 mm.
+
+O sistema deve calcular automaticamente quantas Polaroids do tamanho escolhido cabem na folha, considerando:
+
+- largura da Polaroid;
+- altura da Polaroid;
+- margens;
+- espaçamento entre peças;
+- possibilidade de girar a disposição quando isso melhorar o aproveitamento;
+- espaço necessário para corte.
+
+Não alterar o tamanho físico das Polaroids para tentar preencher a folha.
+
+Se não for possível preencher completamente a folha, deixar espaço em branco. Isso é CORRETO.
+
+5. EXEMPLO COM 20 FOTOS
+
+Se o usuário enviar 20 fotos e escolher determinado tamanho:
+
+O sistema deve calcular automaticamente a quantidade que cabe por folha.
+
+Por exemplo, conceitualmente:
+
+Folha 1 → todas as Polaroids que couberem
+Folha 2 → próximas
+Folha 3 → restante
+
+O número de Polaroids por folha pode ser diferente dependendo do tamanho escolhido.
+
+Não mostrar mais “4, 6, 9 ou 12 por folha” como se isso fosse o tamanho da Polaroid.
+
+A informação pode ser mostrada apenas como resultado:
+
+“12 Polaroids nesta folha”
+
+“8 Polaroids nesta folha”
+
+etc.
+
+6. VÁRIAS PÁGINAS
+
+Se houver mais Polaroids do que cabem em uma folha:
+
+criar automaticamente várias folhas A4.
+
+Exemplo:
+
+20 fotos
+
+Se couberem 12 por folha:
+
+Folha 1 de 2 → 12
+Folha 2 de 2 → 8
+
+Se couberem 8 por folha:
+
+Folha 1 de 3 → 8
+Folha 2 de 3 → 8
+Folha 3 de 3 → 4
+
+Todas as Polaroids devem permanecer exatamente do mesmo tamanho físico.
+
+Mostrar claramente:
+
+“Folha 1 de 3”
+
+e permitir visualizar as demais folhas.
+
+7. FOTO ÚNICA
+
+Preservar o funcionamento de foto única.
+
+Porém, se já existir no projeto a opção “repetir foto”, permitir que a mesma foto possa ser repetida na montagem A4 quando o usuário escolher essa opção.
+
+Exemplo:
+
+1 foto + repetição de 10 unidades
+→ 10 Polaroids idênticas na montagem.
+
+Não alterar o editor individual da foto.
+
+Se essa função de repetição ainda não estiver conectada à etapa 4, deixar a arquitetura preparada, mas NÃO quebrar o funcionamento atual para tentar resolver tudo ao mesmo tempo.
+
+8. PRESERVAR A POLAROID COMPLETA
+
+Cada unidade montada na A4 deve continuar sendo exatamente a Polaroid escolhida pelo usuário.
+
+Preservar:
+
+- modelo da moldura;
+- formato;
+- foto;
+- crop;
+- zoom;
+- posicionamento;
+- legenda;
+- ordem.
+
+Não transformar as Polaroids em quadrados brancos simples.
+
+A moldura atual bege clarinha está boa e pode ser mantida.
+
+A folha A4 continua branca.
+
+Na interface, manter uma diferenciação visual entre o fundo da aplicação e a folha A4, para ficar fácil enxergar os limites da página.
+
+9. SALVAR / BAIXAR A MONTAGEM A4
+
+ESTE É UM DOS PRINCIPAIS PROBLEMAS A CORRIGIR.
+
+Atualmente a montagem A4 aparece corretamente na tela, porém, ao salvar/baixar, o sistema salva as Polaroids individualmente fora da folha A4.
+
+Isso precisa ser corrigido.
+
+Na etapa 4, o botão de salvar/download deve gerar a MONTAGEM DA FOLHA A4 COMPLETA.
+
+Ou seja:
+
+O arquivo de saída deve representar:
+
+FOLHA A4
+
++ margens
++ espaçamento
++ todas as Polaroids posicionadas nela
++ fotos
++ molduras
++ legendas
+
+e NÃO somente as Polaroids individuais.
+
+Se houver duas folhas:
+
+→ o resultado deve representar as duas folhas A4.
+
+IMPORTANTE:
+
+Ainda NÃO criar o PDF definitivo se isso exigir uma implementação completamente nova.
+
+Primeiro garantir que a montagem A4 seja corretamente renderizada como uma composição completa de página.
+
+A arquitetura deve ficar preparada para o PDF real posteriormente.
+
+10. IMPRESSÃO REAL
+
+O layout precisa usar dimensões proporcionais reais.
+
+Não utilizar um quadrado genérico apenas para representar a folha.
+
+A proporção da A4 deve ser:
+
+210 × 297.
+
+A Polaroid deve respeitar as dimensões em centímetros definidas pelo usuário.
+
+A visualização pode ser reduzida na tela, mas deve manter a mesma proporção física.
+
+11. NÃO ALTERAR
+
+NÃO:
+
+- recriar o projeto;
+- alterar as etapas 1, 2 ou 3;
+- remover funcionalidades existentes;
+- criar seleção de moldura diferente para cada foto;
+- mudar a identidade visual;
+- criar dezenas de controles;
+- voltar à lógica de 4/6/9/12 como tamanho;
+- deformar fotos;
+- alterar crop ou zoom;
+- alterar legendas;
+- alterar a ordem das fotos.
+
+12. TESTES OBRIGATÓRIOS
+
+Depois da implementação, testar:
+
+Teste 1
+
+1 foto + tamanho padrão
+→ montagem A4 correta.
+
+Teste 2
+
+5 fotos + tamanho padrão
+→ todas dentro da folha A4, mantendo o mesmo tamanho físico.
+
+Teste 3
+
+20 fotos + tamanho padrão
+→ várias folhas automaticamente, se necessário.
+
+Teste 4
+
+20 fotos + tamanho personalizado maior
+→ menos Polaroids por folha e mais páginas.
+
+Teste 5
+
+20 fotos + tamanho personalizado menor
+→ mais Polaroids por folha e menos páginas.
+
+Teste 6
+
+Alterar largura/altura personalizada
+→ quantidade por folha deve ser recalculada automaticamente.
+
+Teste 7
+
+Alterar uma foto na etapa anterior
+→ montagem A4 deve atualizar mantendo crop, zoom, posição e legenda.
+
+Teste 8
+
+Verificar download
+→ o arquivo deve representar a folha A4 completa, e não Polaroids individuais.
+
+Teste 9
+
+Verificar várias páginas
+→ cada página deve ser uma A4 completa e as Polaroids devem manter exatamente o mesmo tamanho físico entre as páginas.
+
+Teste 10
+
+Verificar desktop e celular.
+
+ANTES DE FINALIZAR, INFORMAR:
+
+- quais arquivos foram alterados;
+- como o tamanho em centímetros foi implementado;
+- como o cálculo automático da quantidade por A4 funciona;
+- como as páginas múltiplas são geradas;
+- como o salvamento da A4 foi corrigido;
+- quais testes foram realizados;
+- qualquer limitação restante.
+
+PRIORIDADE:
+
+1. NÃO quebrar as etapas 1–3.
+2. Tamanho físico fixo/personalizado.
+3. Cálculo automático da quantidade por A4.
+4. Múltiplas folhas quando necessário.
+5. Salvar a folha A4 completa.
+
+Não fazer nenhuma outra alteração fora dessas necessidades.
