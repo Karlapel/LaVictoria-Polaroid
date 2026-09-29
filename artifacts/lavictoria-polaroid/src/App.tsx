@@ -20,6 +20,7 @@ import {
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_CAPTION_LENGTH = 42;
+const SINGLE_REPEAT_MAX = 120;
 const FRAME_WIDTH = 1200;
 
 const FORMAT_CONFIG = {
@@ -747,6 +748,7 @@ function Home() {
   const [sourceImage, setSourceImage] = useState<HTMLImageElement | null>(null);
   const [multiPhotos, setMultiPhotos] = useState<MultiPhoto[]>([]);
   const [activePhotoId, setActivePhotoId] = useState<string | null>(null);
+  const [singleRepeatCount, setSingleRepeatCount] = useState(1);
   const [multipleMode, setMultipleMode] = useState<MultipleMode>('each');
   const [repeatCount, setRepeatCount] = useState(2);
   const [isLoading, setIsLoading] = useState(false);
@@ -856,6 +858,7 @@ function Home() {
     }
 
     setIsLoading(true);
+    setSingleRepeatCount(1);
     setZoom(1);
     setPanX(0);
     setPanY(0);
@@ -963,6 +966,7 @@ function Home() {
     setImage(null);
     setIsLoading(false);
     setSourceImage(null);
+    setSingleRepeatCount(1);
     setZoom(1);
     setPanX(0);
     setPanY(0);
@@ -1152,15 +1156,15 @@ function Home() {
     ? 1
     : multipleMode === 'repeat' ? repeatCount : multiPhotos.length;
   const mountPhotos: MountPhoto[] = appMode === 'single'
-    ? (image ? [{
-      id: 'single-photo',
+    ? (image ? Array.from({ length: singleRepeatCount }, (_, index) => ({
+      id: `single-photo-${index}`,
       fileName: image.file.name,
       sourceImage,
       zoom,
       panX,
       panY,
       caption,
-    }] : [])
+    })) : [])
     : (multipleMode === 'repeat'
       ? (activePhoto ? Array.from({ length: repeatCount }, (_, index) => ({
         id: `${activePhoto.id}-repeat-${index}`,
@@ -1521,6 +1525,56 @@ function Home() {
                 </span>
               </div>
             </div>
+
+            {appMode === 'single' && image && (
+              <div className="single-repeat-field" data-testid="single-repeat-field">
+                <div className="format-field-header">
+                  <span className="format-label">Print quantity</span>
+                  <span className="format-hint">same photo, same edit</span>
+                </div>
+                <div className="repeat-settings">
+                  <label htmlFor="single-repeat-count">Repeat this photo</label>
+                  <div className="repeat-count-control">
+                    <button
+                      className="zoom-button repeat-count-button"
+                      type="button"
+                      onClick={() => setSingleRepeatCount((current) => Math.max(1, current - 1))}
+                      aria-label="Decrease single photo copies"
+                      data-testid="button-single-repeat-decrease"
+                    >
+                      <Minus size={13} />
+                    </button>
+                    <input
+                      id="single-repeat-count"
+                      type="number"
+                      min="1"
+                      max={SINGLE_REPEAT_MAX}
+                      value={singleRepeatCount}
+                      onChange={(event) => {
+                        const nextCount = Number(event.target.value);
+                        if (Number.isNaN(nextCount)) return;
+                        setSingleRepeatCount(Math.min(SINGLE_REPEAT_MAX, Math.max(1, nextCount)));
+                        setDownloaded(false);
+                      }}
+                      aria-label="Number of copies of the single photo"
+                      data-testid="input-single-repeat-count"
+                    />
+                    <button
+                      className="zoom-button repeat-count-button"
+                      type="button"
+                      onClick={() => setSingleRepeatCount((current) => Math.min(SINGLE_REPEAT_MAX, current + 1))}
+                      aria-label="Increase single photo copies"
+                      data-testid="button-single-repeat-increase"
+                    >
+                      <Plus size={13} />
+                    </button>
+                  </div>
+                </div>
+                <p className="single-repeat-hint">
+                  {singleRepeatCount} identical Polaroid{singleRepeatCount === 1 ? '' : 's'} will be placed in the A4 mounting.
+                </p>
+              </div>
+            )}
 
             {error && (
               <div className="error-message" role="alert" aria-live="polite" data-testid="status-upload-error">

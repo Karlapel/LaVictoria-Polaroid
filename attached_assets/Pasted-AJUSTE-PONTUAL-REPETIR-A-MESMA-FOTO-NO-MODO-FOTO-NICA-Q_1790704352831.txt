@@ -1,0 +1,237 @@
+AJUSTE PONTUAL — REPETIR A MESMA FOTO NO MODO FOTO ÚNICA
+
+Quero fazer apenas este ajuste no projeto atual.
+
+NÃO recrie o projeto.
+NÃO altere as etapas 1, 2 e 3 que já estão funcionando.
+NÃO altere o editor de fotos, zoom, enquadramento, posicionamento, legenda, modelos de Polaroid ou o sistema atual de tamanho em centímetros.
+NÃO altere o cálculo atual de quantidade de Polaroids por folha A4.
+
+Tudo que já funciona deve permanecer exatamente como está.
+
+---
+
+1. REPETIÇÃO DA FOTO ÚNICA
+
+Quando o usuário estiver no modo de uma única foto, atualmente existe apenas uma cópia da foto.
+
+Preciso adicionar uma opção para definir quantas vezes essa mesma foto será repetida na montagem para impressão.
+
+Exemplo:
+
+- Foto escolhida: 1 foto
+- Quantidade de cópias: 10
+- Resultado: 10 Polaroids idênticas
+
+Outro exemplo:
+
+- Quantidade de cópias: 20
+- Resultado: 20 Polaroids idênticas
+
+Outro:
+
+- Quantidade de cópias: 50
+- Resultado: 50 Polaroids idênticas distribuídas automaticamente em várias folhas A4.
+
+Interface
+
+Adicionar uma área clara com algo semelhante a:
+
+Quantidade de cópias
+
+"[-] 10 [+]"
+
+ou um campo numérico:
+
+Repetir esta foto: "[ 10 ]" vezes
+
+O usuário deve poder digitar diretamente a quantidade.
+
+Aceitar quantidades maiores, como:
+
+10, 20, 30, 50, 100 etc.
+
+Coloque um limite técnico razoável apenas para evitar travamentos do celular, mas não faça um limite baixo que impeça uso para lembrancinhas.
+
+---
+
+2. INTEGRAR COM A MONTAGEM A4
+
+A quantidade escolhida deve alimentar diretamente a etapa 4 — Montagem para impressão.
+
+Exemplo:
+
+Se o usuário escolher:
+
+1 foto + 20 cópias
+
+e o tamanho da Polaroid escolhido permitir:
+
+8 Polaroids por folha A4
+
+o sistema deve criar automaticamente:
+
+- Folha 1 → 8 Polaroids
+- Folha 2 → 8 Polaroids
+- Folha 3 → 4 Polaroids
+
+Total: 20 Polaroids
+
+Não quero que o usuário precise duplicar manualmente a foto.
+
+---
+
+3. TODAS AS CÓPIAS DEVEM SER IDÊNTICAS
+
+As cópias devem preservar exatamente:
+
+- mesma foto
+- mesmo enquadramento
+- mesmo zoom
+- mesma posição
+- mesma proporção
+- mesma legenda/nome
+- mesmo modelo de Polaroid
+- mesmo tamanho em centímetros
+- mesma moldura
+
+Se o usuário editar a foto original antes da montagem, todas as cópias devem utilizar a versão atualizada.
+
+---
+
+4. NÃO ALTERAR O MODO DE VÁRIAS FOTOS
+
+O modo de várias fotos deve continuar funcionando exatamente como está.
+
+Não transformar essa função em outra coisa.
+
+A nova quantidade de cópias deve ser especialmente útil para:
+
+Modo: uma foto
+
+Exemplo de uso:
+
+«“Quero fazer 30 lembrancinhas de batizado com a mesma foto.”»
+
+O usuário escolhe a foto, coloca 30 cópias, escolhe o tamanho da Polaroid e o sistema monta automaticamente todas as folhas A4.
+
+---
+
+5. DOWNLOAD
+
+O download da montagem A4 deve continuar funcionando como já está.
+
+Para uma única foto repetida:
+
+- gerar as folhas A4 necessárias
+- manter a composição correta
+- manter todas as Polaroids no tamanho físico escolhido
+- não baixar apenas uma Polaroid quando o usuário pediu várias cópias
+
+Se forem necessárias várias folhas, cada folha deve estar disponível para download.
+
+Não criar PDF agora.
+
+Continuar trabalhando com a imagem A4 como o sistema já faz atualmente.
+
+---
+
+6. CORRIGIR TEXTO ESTÁTICO
+
+Existe atualmente um texto na parte inferior da montagem que pode aparecer como:
+
+“4 fotos por folha”
+
+Esse texto não pode mais ser fixo, porque a quantidade depende do tamanho físico da Polaroid.
+
+Substituir por algo dinâmico, por exemplo:
+
+“8 Polaroids nesta folha”
+
+ou
+
+“8 Polaroids nesta página”
+
+A quantidade deve ser calculada automaticamente para cada folha.
+
+Se a última folha tiver apenas 4 Polaroids, mostrar:
+
+“4 Polaroids nesta folha”
+
+---
+
+7. IMPORTANTE — PRESERVAR O QUE JÁ ESTÁ FUNCIONANDO
+
+Não mexer em:
+
+- upload de fotos
+- modo uma foto
+- modo várias fotos
+- edição individual
+- zoom
+- posicionamento
+- enquadramento
+- legendas
+- modelos de Polaroid
+- escolha de tamanho em centímetros
+- cálculo automático de Polaroids por A4
+- criação de várias folhas A4
+- montagem visual da folha
+- download da folha A4
+- responsividade atual
+- ordem das etapas 1 → 2 → 3 → 4
+
+Este é um ajuste pontual, não uma reformulação do projeto.
+
+---
+
+8. TESTES OBRIGATÓRIOS
+
+Depois de implementar, testar:
+
+Teste 1
+
+1 foto
+Quantidade: 1
+→ 1 Polaroid
+
+Teste 2
+
+1 foto
+Quantidade: 10
+→ 10 Polaroids distribuídas automaticamente nas folhas A4.
+
+Teste 3
+
+1 foto
+Quantidade: 20
+→ 20 Polaroids, sem precisar duplicar manualmente.
+
+Teste 4
+
+1 foto
+Quantidade: 50
+→ 50 Polaroids distribuídas em várias folhas A4.
+
+Teste 5
+
+Alterar zoom/enquadramento da foto original
+→ todas as cópias devem acompanhar a alteração.
+
+Teste 6
+
+Alterar a quantidade de 20 para 10
+→ a montagem deve recalcular automaticamente.
+
+Teste 7
+
+Voltar para o modo de várias fotos
+→ tudo deve continuar funcionando como antes.
+
+TESTE FINAL
+
+Não faça nenhuma alteração estética ou funcional que não seja necessária para essa implementação.
+
+O objetivo desta etapa é somente:
+
+UMA FOTO → ESCOLHER QUANTIDADE DE CÓPIAS → GERAR AUTOMATICAMENTE TODAS AS POLAROIDS → DISTRIBUIR NAS FOLHAS A4 CONFORME O TAMANHO FÍSICO ESCOLHIDO → BAIXAR A MONTAGEM.

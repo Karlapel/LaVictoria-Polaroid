@@ -648,6 +648,17 @@
   color: hsl(var(--primary));
 }
 
+.single-repeat-field {
+  margin-top: 21px;
+}
+
+.single-repeat-hint {
+  margin: 8px 0 0;
+  color: hsl(var(--muted-foreground));
+  font-size: .68rem;
+  line-height: 1.45;
+}
+
 .format-field {
   margin-top: 25px;
 }
