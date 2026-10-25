@@ -479,6 +479,7 @@ function A4MountingStage({
   const [customHeight, setCustomHeight] = useState(String(standardSize.heightCm));
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
+  const [downloadError, setDownloadError] = useState('');
   const customSizeError = validateA4Size(customWidth, customHeight);
   const selectedPreset = A4_SIZE_PRESETS.find((preset) => preset.id === sizePreset);
   const size = sizePreset === 'custom'
@@ -500,6 +501,7 @@ function A4MountingStage({
     if (!canDownload || isDownloading) return;
     setIsDownloading(true);
     setDownloaded(false);
+    setDownloadError('');
 
     try {
       for (const [index, pageItems] of pages.entries()) {
@@ -507,12 +509,15 @@ function A4MountingStage({
         drawA4SheetCanvas(canvas, pageItems, getA4Layout(size, pageItems.length), formatConfig);
         const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
         if (!blob) throw new Error('Could not make the A4 sheet');
+        const printReadyBlob = await addPngDpiMetadata(blob, 300);
         const suffix = pages.length > 1 ? `-sheet-${index + 1}-of-${pages.length}` : '';
-        triggerBlobDownload(blob, `lavictoria-a4${suffix}.png`);
+        triggerBlobDownload(printReadyBlob, `lavictoria-a4${suffix}.png`);
         await new Promise((resolve) => window.setTimeout(resolve, 90));
       }
       setDownloaded(true);
       window.setTimeout(() => setDownloaded(false), 3000);
+    } catch {
+      setDownloadError('Could not prepare the A4 sheet. Please try again.');
     } finally {
       setIsDownloading(false);
     }
@@ -632,10 +637,87 @@ function A4MountingStage({
             : `Download ${pageCount} A4 sheet${pageCount === 1 ? '' : 's'}`}
       </button>
       <p className="a4-download-hint">
-        Each PNG is a complete 210 × 297 mm composition with margins, spacing, photos, frames, and captions.
+        Each PNG is a complete 210 × 297 mm composition at 300 DPI, with margins, spacing, photos, frames, and captions.
       </p>
+      {downloadError && <p className="a4-download-error" role="alert">{downloadError}</p>}
     </section>
   );
+}
+
+function calculatePngCrc32(bytes: Uint8Array): number {
+  let crc = 0xffffffff;
+  for (const byte of bytes) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) {
+      crc = (crc & 1) ? (crc >>> 1) ^ 0xedb88320 : crc >>> 1;
+    }
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+async function addPngDpiMetadata(blob: Blob, dpi: number): Promise<Blob> {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  const signature = [137, 80, 78, 71, 13, 10, 26, 10];
+  if (bytes.length < 8 || !signature.every((byte, index) => bytes[index] === byte)) {
+    throw new Error('The A4 export is not a valid PNG');
+  }
+
+  const pixelsPerMeter = Math.round(dpi / 0.0254);
+  const pHYsChunk = new Uint8Array(21);
+  const pHYsView = new DataView(pHYsChunk.buffer);
+  pHYsView.setUint32(0, 9);
+  pHYsChunk.set([0x70, 0x48, 0x59, 0x73], 4); // pHYs
+  pHYsView.setUint32(8, pixelsPerMeter);
+  pHYsView.setUint32(12, pixelsPerMeter);
+  pHYsChunk[16] = 1; // pixels per meter
+  pHYsView.setUint32(17, calculatePngCrc32(pHYsChunk.subarray(4, 17)));
+
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const retainedChunks: Uint8Array[] = [];
+  let offset = 8;
+  let foundHeader = false;
+  let foundEnd = false;
+
+  while (offset + 12 <= bytes.length) {
+    const chunkLength = view.getUint32(offset);
+    const chunkEnd = offset + 12 + chunkLength;
+    if (chunkEnd > bytes.length) throw new Error('The A4 PNG contains an invalid chunk');
+    const chunkType = String.fromCharCode(...bytes.subarray(offset + 4, offset + 8));
+
+    if (!foundHeader && chunkType !== 'IHDR') {
+      throw new Error('The A4 PNG header is missing');
+    }
+
+    if (chunkType === 'IHDR') {
+      if (foundHeader) throw new Error('The A4 PNG contains duplicate headers');
+      foundHeader = true;
+      retainedChunks.push(bytes.slice(offset, chunkEnd), pHYsChunk);
+    } else if (chunkType !== 'pHYs') {
+      retainedChunks.push(bytes.slice(offset, chunkEnd));
+    }
+
+    offset = chunkEnd;
+    if (chunkType === 'IEND') {
+      foundEnd = true;
+      break;
+    }
+  }
+
+  if (!foundHeader || !foundEnd || offset !== bytes.length) {
+    throw new Error('The A4 PNG is incomplete');
+  }
+
+  const outputBytes = new Uint8Array(
+    8 + retainedChunks.reduce((total, chunk) => total + chunk.length, 0),
+  );
+  outputBytes.set(bytes.subarray(0, 8));
+  let outputOffset = 8;
+  for (const chunk of retainedChunks) {
+    outputBytes.set(chunk, outputOffset);
+    outputOffset += chunk.length;
+  }
+
+  return new Blob([outputBytes.buffer as ArrayBuffer], { type: 'image/png' });
 }
 
 function triggerBlobDownload(blob: Blob, filename: string) {
