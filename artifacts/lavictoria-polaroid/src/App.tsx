@@ -53,6 +53,16 @@ const FORMAT_CONFIG = {
   },
 } as const;
 
+const FRAME_COLOR_OPTIONS = [
+  { id: 'white', label: 'White', value: '#f8f5ed' },
+  { id: 'pink', label: 'Light pink', value: '#f4dde4' },
+  { id: 'tiffany', label: 'Soft Tiffany blue', value: '#c9e9e3' },
+  { id: 'beige', label: 'Beige', value: '#e8dcc6' },
+  { id: 'lilac', label: 'Lilac', value: '#e6ddf2' },
+] as const;
+
+type FrameColor = (typeof FRAME_COLOR_OPTIONS)[number]['value'];
+
 type PolaroidFormat = keyof typeof FORMAT_CONFIG;
 type FormatConfig = (typeof FORMAT_CONFIG)[PolaroidFormat];
 
@@ -140,9 +150,10 @@ async function renderPolaroidBlob(
   formatConfig: FormatConfig,
   framing: FramingState,
   caption: string,
+  frameColor: FrameColor,
 ) {
   const canvas = document.createElement('canvas');
-  drawPolaroidCanvas(canvas, sourceImage, formatConfig, framing, caption);
+  drawPolaroidCanvas(canvas, sourceImage, formatConfig, framing, caption, frameColor);
 
   return new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
 }
@@ -153,6 +164,7 @@ function drawPolaroidCanvas(
   formatConfig: FormatConfig,
   framing: FramingState,
   caption: string,
+  frameColor: FrameColor,
 ) {
   const {
     photoWidth,
@@ -166,7 +178,7 @@ function drawPolaroidCanvas(
   const context = canvas.getContext('2d');
   if (!context) throw new Error('Canvas is unavailable');
 
-  context.fillStyle = '#f8f5ed';
+  context.fillStyle = frameColor;
   context.fillRect(0, 0, canvas.width, canvas.height);
   context.fillStyle = '#dfd2bf';
   context.fillRect(sideInset, topInset, photoWidth, photoHeight);
@@ -309,6 +321,7 @@ function drawMountedPolaroidCanvas(
   formatConfig: FormatConfig,
   framing: FramingState,
   caption: string,
+  frameColor: FrameColor,
   widthMm: number,
   heightMm: number,
   rotated = false,
@@ -322,6 +335,7 @@ function drawMountedPolaroidCanvas(
       formatConfig,
       framing,
       caption,
+      frameColor,
       heightMm,
       widthMm,
       false,
@@ -350,11 +364,11 @@ function drawMountedPolaroidCanvas(
   const context = canvas.getContext('2d');
   if (!context) throw new Error('Canvas is unavailable');
 
-  context.fillStyle = '#f8f5ed';
+  context.fillStyle = frameColor;
   context.fillRect(0, 0, outputWidth, outputHeight);
 
   const polaroidCanvas = document.createElement('canvas');
-  drawPolaroidCanvas(polaroidCanvas, sourceImage, formatConfig, framing, caption);
+  drawPolaroidCanvas(polaroidCanvas, sourceImage, formatConfig, framing, caption, frameColor);
   const scale = Math.min(outputWidth / polaroidCanvas.width, outputHeight / polaroidCanvas.height);
   const drawnWidth = polaroidCanvas.width * scale;
   const drawnHeight = polaroidCanvas.height * scale;
@@ -372,6 +386,7 @@ function drawA4SheetCanvas(
   items: MountPhoto[],
   layout: A4Layout,
   formatConfig: FormatConfig,
+  frameColor: FrameColor,
   renderWidthPx = A4_RENDER_WIDTH_PX,
 ) {
   const renderScale = renderWidthPx / A4_WIDTH_MM;
@@ -392,6 +407,7 @@ function drawA4SheetCanvas(
       formatConfig,
       item,
       item.caption.trim(),
+      frameColor,
       placement.width,
       placement.height,
       layout.rotated,
@@ -411,10 +427,12 @@ function A4PageCanvas({
   items,
   size,
   formatConfig,
+  frameColor,
 }: {
   items: MountPhoto[];
   size: A4Size;
   formatConfig: FormatConfig;
+  frameColor: FrameColor;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -426,9 +444,10 @@ function A4PageCanvas({
       items,
       getA4Layout(size, items.length),
       formatConfig,
+      frameColor,
       900,
     );
-  }, [formatConfig, items, size]);
+  }, [formatConfig, frameColor, items, size]);
 
   return (
     <canvas
@@ -446,17 +465,19 @@ function A4PagePreview({
   totalPages,
   size,
   formatConfig,
+  frameColor,
 }: {
   items: MountPhoto[];
   pageNumber: number;
   totalPages: number;
   size: A4Size;
   formatConfig: FormatConfig;
+  frameColor: FrameColor;
 }) {
   return (
     <article className="a4-page-card" data-testid={`a4-page-preview-${pageNumber}`}>
       <div className="a4-page-surface" aria-label={`A4 sheet ${pageNumber} of ${totalPages}`}>
-        <A4PageCanvas items={items} size={size} formatConfig={formatConfig} />
+        <A4PageCanvas items={items} size={size} formatConfig={formatConfig} frameColor={frameColor} />
       </div>
       <div className="a4-page-meta">
         <span>Page {pageNumber} of {totalPages}</span>
@@ -469,9 +490,11 @@ function A4PagePreview({
 function A4MountingStage({
   items,
   formatConfig,
+  frameColor,
 }: {
   items: MountPhoto[];
   formatConfig: FormatConfig;
+  frameColor: FrameColor;
 }) {
   const [sizePreset, setSizePreset] = useState<A4SizePreset>('standard');
   const standardSize = A4_SIZE_PRESETS.find((preset) => preset.id === 'standard')!.size;
@@ -506,7 +529,7 @@ function A4MountingStage({
     try {
       for (const [index, pageItems] of pages.entries()) {
         const canvas = document.createElement('canvas');
-        drawA4SheetCanvas(canvas, pageItems, getA4Layout(size, pageItems.length), formatConfig);
+        drawA4SheetCanvas(canvas, pageItems, getA4Layout(size, pageItems.length), formatConfig, frameColor);
         const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
         if (!blob) throw new Error('Could not make the A4 sheet');
         const printReadyBlob = await addPngDpiMetadata(blob, 300);
@@ -619,6 +642,7 @@ function A4MountingStage({
             totalPages={pageCount}
             size={size}
             formatConfig={formatConfig}
+            frameColor={frameColor}
           />
         ))}
       </div>
@@ -741,12 +765,14 @@ function triggerBlobDownload(blob: Blob, filename: string) {
 function MiniPolaroidPreview({
   photo,
   formatConfig,
+  frameColor,
   index,
   isSelected,
   onSelect,
 }: {
   photo: MultiPhoto;
   formatConfig: FormatConfig;
+  frameColor: FrameColor;
   index: number;
   isSelected: boolean;
   onSelect: () => void;
@@ -779,6 +805,7 @@ function MiniPolaroidPreview({
   const frameStyle = {
     '--mini-photo-ratio': `${formatConfig.photoWidth} / ${formatConfig.photoHeight}`,
     '--mini-caption-ratio': `${formatConfig.photoWidth} / ${formatConfig.captionHeight}`,
+    '--frame-color': frameColor,
   } as CSSProperties;
 
   return (
@@ -813,6 +840,7 @@ function Home() {
   const [appMode, setAppMode] = useState<AppMode>('single');
   const [image, setImage] = useState<ImageFile | null>(null);
   const [sourceImage, setSourceImage] = useState<HTMLImageElement | null>(null);
+  const [frameColor, setFrameColor] = useState<FrameColor>(FRAME_COLOR_OPTIONS[0].value);
   const [multiPhotos, setMultiPhotos] = useState<MultiPhoto[]>([]);
   const [activePhotoId, setActivePhotoId] = useState<string | null>(null);
   const [singleRepeatCount, setSingleRepeatCount] = useState(1);
@@ -847,6 +875,7 @@ function Home() {
     '--frame-top': `${(formatConfig.topInset / FRAME_WIDTH) * 100}%`,
     '--photo-ratio': `${formatConfig.photoWidth} / ${formatConfig.photoHeight}`,
     '--caption-ratio': `${formatConfig.photoWidth} / ${formatConfig.captionHeight}`,
+    '--frame-color': frameColor,
   } as CSSProperties;
 
   useEffect(() => {
@@ -1169,6 +1198,7 @@ function Home() {
         formatConfig,
         { zoom, panX, panY },
         displayCaption,
+        frameColor,
       );
       if (!blob) throw new Error('Could not make the image');
 
@@ -1198,6 +1228,7 @@ function Home() {
           formatConfig,
           photo,
           photo.caption.trim(),
+          frameColor,
         );
         if (!blob) throw new Error('Could not make the image');
         const baseName = photo.file.name
@@ -1572,6 +1603,44 @@ function Home() {
               </div>
             </div>
 
+            <div className="frame-color-field">
+              <div className="format-field-header">
+                <span className="format-label" id="frame-color-label">Frame color</span>
+                <span className="format-hint">
+                  {FRAME_COLOR_OPTIONS.find((option) => option.value === frameColor)?.label ?? 'White'}
+                </span>
+              </div>
+              <div className="frame-color-options" role="radiogroup" aria-labelledby="frame-color-label">
+                {FRAME_COLOR_OPTIONS.map((option) => {
+                  const isSelected = option.value === frameColor;
+
+                  return (
+                    <button
+                      key={option.id}
+                      className={`frame-color-option${isSelected ? ' is-selected' : ''}`}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSelected}
+                      aria-label={`${option.label} frame`}
+                      title={`${option.label} frame`}
+                      onClick={() => {
+                        setFrameColor(option.value);
+                        setDownloaded(false);
+                        setMultiDownloaded(false);
+                      }}
+                      data-testid={`button-frame-color-${option.id}`}
+                    >
+                      <span
+                        className="frame-color-swatch"
+                        style={{ backgroundColor: option.value }}
+                        aria-hidden="true"
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="caption-field">
               <div className="caption-field-header">
                 <label className="caption-label" htmlFor={appMode === 'single' ? 'polaroid-caption' : 'multi-polaroid-caption'}>
@@ -1788,6 +1857,7 @@ function Home() {
                       key={photo.id}
                       photo={photo}
                       formatConfig={formatConfig}
+                      frameColor={frameColor}
                       index={index}
                       isSelected={photo.id === activePhoto?.id}
                       onSelect={() => setActivePhotoId(photo.id)}
@@ -1822,7 +1892,7 @@ function Home() {
         </div>
 
         {mountPhotos.length > 0 && (
-          <A4MountingStage items={mountPhotos} formatConfig={formatConfig} />
+          <A4MountingStage items={mountPhotos} formatConfig={formatConfig} frameColor={frameColor} />
         )}
 
         <div className="footer-line" data-testid="text-footer">one photo · one keepsake · made locally</div>
