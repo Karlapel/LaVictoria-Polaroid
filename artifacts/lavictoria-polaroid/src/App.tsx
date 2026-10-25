@@ -629,7 +629,16 @@ function A4MountingStage({
         onClick={downloadA4}
         data-testid="button-download-a4"
       >
-        {downloaded ? <Check size={17} /> : <Download size={17} />}
+        <Download
+          size={17}
+          style={{ display: downloaded ? 'none' : 'inline-block' }}
+          aria-hidden="true"
+        />
+        <Check
+          size={17}
+          style={{ display: downloaded ? 'inline-block' : 'none' }}
+          aria-hidden="true"
+        />
         {downloaded
           ? 'A4 sheets saved'
           : isDownloading
