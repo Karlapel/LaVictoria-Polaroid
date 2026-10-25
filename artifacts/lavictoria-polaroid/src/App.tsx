@@ -1641,7 +1641,7 @@ function Home() {
                   </div>
                 </div>
                 <p className="single-repeat-hint">
-                  {singleRepeatCount} identical Polaroid{singleRepeatCount === 1 ? '' : 's'} will be placed in the A4 mounting.
+                  {`${singleRepeatCount} identical Polaroid${singleRepeatCount === 1 ? '' : 's'} will be placed in the A4 mounting.`}
                 </p>
               </div>
             )}
