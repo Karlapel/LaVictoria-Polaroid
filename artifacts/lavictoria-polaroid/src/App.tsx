@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useRef, useState } from 'react';
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertCircle,
   Camera,
@@ -312,6 +312,7 @@ function drawMountedPolaroidCanvas(
   widthMm: number,
   heightMm: number,
   rotated = false,
+  renderScale = A4_RENDER_WIDTH_PX / A4_WIDTH_MM,
 ) {
   if (rotated) {
     const unrotatedCanvas = document.createElement('canvas');
@@ -323,9 +324,11 @@ function drawMountedPolaroidCanvas(
       caption,
       heightMm,
       widthMm,
+      false,
+      renderScale,
     );
-    canvas.width = Math.max(1, Math.round(widthMm * (A4_RENDER_WIDTH_PX / A4_WIDTH_MM)));
-    canvas.height = Math.max(1, Math.round(heightMm * (A4_RENDER_WIDTH_PX / A4_WIDTH_MM)));
+    canvas.width = Math.max(1, Math.round(widthMm * renderScale));
+    canvas.height = Math.max(1, Math.round(heightMm * renderScale));
     const rotatedContext = canvas.getContext('2d');
     if (!rotatedContext) throw new Error('Canvas is unavailable');
     rotatedContext.save();
@@ -340,8 +343,8 @@ function drawMountedPolaroidCanvas(
     return;
   }
 
-  const outputWidth = Math.max(1, Math.round(widthMm * (A4_RENDER_WIDTH_PX / A4_WIDTH_MM)));
-  const outputHeight = Math.max(1, Math.round(heightMm * (A4_RENDER_WIDTH_PX / A4_WIDTH_MM)));
+  const outputWidth = Math.max(1, Math.round(widthMm * renderScale));
+  const outputHeight = Math.max(1, Math.round(heightMm * renderScale));
   canvas.width = outputWidth;
   canvas.height = outputHeight;
   const context = canvas.getContext('2d');
@@ -369,9 +372,12 @@ function drawA4SheetCanvas(
   items: MountPhoto[],
   layout: A4Layout,
   formatConfig: FormatConfig,
+  renderWidthPx = A4_RENDER_WIDTH_PX,
 ) {
-  canvas.width = A4_RENDER_WIDTH_PX;
-  canvas.height = A4_RENDER_HEIGHT_PX;
+  const renderScale = renderWidthPx / A4_WIDTH_MM;
+  const renderHeightPx = Math.round(renderWidthPx * A4_HEIGHT_MM / A4_WIDTH_MM);
+  canvas.width = renderWidthPx;
+  canvas.height = renderHeightPx;
   const context = canvas.getContext('2d');
   if (!context) throw new Error('Canvas is unavailable');
   context.fillStyle = '#fff';
@@ -389,53 +395,47 @@ function drawA4SheetCanvas(
       placement.width,
       placement.height,
       layout.rotated,
+      renderScale,
     );
     context.drawImage(
       itemCanvas,
       (placement.left / A4_WIDTH_MM) * canvas.width,
-      (placement.top / A4_HEIGHT_MM) * canvas.height,
+      (placement.top / A4_HEIGHT_MM) * renderHeightPx,
       (placement.width / A4_WIDTH_MM) * canvas.width,
-      (placement.height / A4_HEIGHT_MM) * canvas.height,
+      (placement.height / A4_HEIGHT_MM) * renderHeightPx,
     );
   });
 }
 
-function A4PolaroidCanvas({
-  photo,
+function A4PageCanvas({
+  items,
+  size,
   formatConfig,
-  widthMm,
-  heightMm,
-  rotated,
 }: {
-  photo: MountPhoto;
+  items: MountPhoto[];
+  size: A4Size;
   formatConfig: FormatConfig;
-  widthMm: number;
-  heightMm: number;
-  rotated: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    drawMountedPolaroidCanvas(
+    drawA4SheetCanvas(
       canvas,
-      photo.sourceImage,
+      items,
+      getA4Layout(size, items.length),
       formatConfig,
-      photo,
-      photo.caption.trim(),
-      widthMm,
-      heightMm,
-      rotated,
+      900,
     );
-  }, [formatConfig, heightMm, photo.caption, photo.panX, photo.panY, photo.sourceImage, photo.zoom, rotated, widthMm]);
+  }, [formatConfig, items, size]);
 
   return (
     <canvas
       ref={canvasRef}
-      className="a4-polaroid-canvas"
+      className="a4-page-canvas"
       role="img"
-      aria-label={`A4 preview of ${photo.fileName}`}
+      aria-label="A4 sheet preview"
     />
   );
 }
@@ -453,34 +453,10 @@ function A4PagePreview({
   size: A4Size;
   formatConfig: FormatConfig;
 }) {
-  const layout = getA4Layout(size, items.length);
-
   return (
     <article className="a4-page-card" data-testid={`a4-page-preview-${pageNumber}`}>
       <div className="a4-page-surface" aria-label={`A4 sheet ${pageNumber} of ${totalPages}`}>
-        {items.map((photo, index) => {
-          const placement = layout.placements[index];
-          return (
-            <div
-              className="a4-polaroid"
-              key={`${photo.id}-${pageNumber}-${index}`}
-              style={{
-                left: `${(placement.left / A4_WIDTH_MM) * 100}%`,
-                top: `${(placement.top / A4_HEIGHT_MM) * 100}%`,
-                width: `${(placement.width / A4_WIDTH_MM) * 100}%`,
-                height: `${(placement.height / A4_HEIGHT_MM) * 100}%`,
-              }}
-            >
-              <A4PolaroidCanvas
-                photo={photo}
-                formatConfig={formatConfig}
-                widthMm={placement.width}
-                heightMm={placement.height}
-                rotated={layout.rotated}
-              />
-            </div>
-          );
-        })}
+        <A4PageCanvas items={items} size={size} formatConfig={formatConfig} />
       </div>
       <div className="a4-page-meta">
         <span>Page {pageNumber} of {totalPages}</span>
@@ -749,6 +725,7 @@ function Home() {
   const [multiPhotos, setMultiPhotos] = useState<MultiPhoto[]>([]);
   const [activePhotoId, setActivePhotoId] = useState<string | null>(null);
   const [singleRepeatCount, setSingleRepeatCount] = useState(1);
+  const [singleRepeatInput, setSingleRepeatInput] = useState('1');
   const [multipleMode, setMultipleMode] = useState<MultipleMode>('each');
   const [repeatCount, setRepeatCount] = useState(2);
   const [isLoading, setIsLoading] = useState(false);
@@ -859,6 +836,7 @@ function Home() {
 
     setIsLoading(true);
     setSingleRepeatCount(1);
+    setSingleRepeatInput('1');
     setZoom(1);
     setPanX(0);
     setPanY(0);
@@ -967,6 +945,7 @@ function Home() {
     setIsLoading(false);
     setSourceImage(null);
     setSingleRepeatCount(1);
+    setSingleRepeatInput('1');
     setZoom(1);
     setPanX(0);
     setPanY(0);
