@@ -1874,7 +1874,20 @@ function Home() {
               onClick={appMode === 'single' ? downloadPolaroid : downloadMultiple}
               data-testid={appMode === 'single' ? 'button-download-polaroid' : 'button-download-polaroids'}
             >
-              {(appMode === 'single' ? downloaded : multiDownloaded) ? <Check size={17} /> : <Download size={17} />}
+              <Download
+                size={17}
+                style={{
+                  display: (appMode === 'single' ? downloaded : multiDownloaded) ? 'none' : 'inline-block',
+                }}
+                aria-hidden="true"
+              />
+              <Check
+                size={17}
+                style={{
+                  display: (appMode === 'single' ? downloaded : multiDownloaded) ? 'inline-block' : 'none',
+                }}
+                aria-hidden="true"
+              />
               {appMode === 'single'
                 ? (downloaded ? 'Saved to your downloads' : 'Download your Polaroid')
                 : (multiDownloaded
